@@ -19,8 +19,8 @@ export const getEmbeddings = async (text: string) => {
 
 export const getCompletion = async (prompt: string) => {
     const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: prompt,
+        model: 'gemini-1.5-flash',
+        contents: [{ parts: [{ text: prompt }] }],
         config: {
           candidateCount: 1,
           temperature: 0,

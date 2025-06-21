@@ -9,18 +9,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, LogOut, Settings, User, BookOpen, Users, BarChart3, Calendar, Brain, CreditCard, Tags, Home, GraduationCap } from 'lucide-react';
+import { Menu, LogOut, Settings, User, BookOpen, Users, BarChart3, Calendar, Brain, CreditCard, Tags, Home, GraduationCap, Crosshair } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserNav } from '@/components/UserNav';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Materials', href: '/dashboard/materials', icon: BookOpen },
   { name: 'Study Groups', href: '/dashboard/groups', icon: Users },
+  { name: 'Materials', href: '/dashboard/materials', icon: BookOpen },
+  { name: 'Focus Sessions', href: '/dashboard/focus-session', icon: Crosshair },
   { name: 'Quizzes', href: '/dashboard/quizzes', icon: Brain },
-  { name: 'Flashcards', href: '/dashboard/flashcards', icon: CreditCard },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'Flashcards', href: '/dashboard/flashcards', icon: CreditCard },
   { name: 'Planner', href: '/dashboard/planner', icon: Calendar },
   { name: 'Subjects', href: '/dashboard/subjects', icon: GraduationCap },
   { name: 'Tags Management', href: '/dashboard/tags', icon: Tags },

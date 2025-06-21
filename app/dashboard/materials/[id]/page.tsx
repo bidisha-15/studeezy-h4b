@@ -7,13 +7,12 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-// import { Tabs, TabsContent, TabsList, TabsTrigger }
-import { 
-  ArrowLeft, 
-  FileText, 
-  Calendar, 
-  Download, 
-  Trash2, 
+import {
+  ArrowLeft,
+  FileText,
+  Calendar,
+  Download,
+  Trash2,
   Edit,
   MessageSquare,
   Brain,
@@ -47,18 +46,19 @@ interface Material {
   }[];
 }
 
-interface ChatMessage {
+interface Message {
   id: string;
-  message: string;
-  response: string;
+  content: string;
+  role: 'user' | 'assistant';
   timestamp: string;
 }
 
-export default function MaterialDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function MaterialDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const [material, setMaterial] = useState<Material | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
   const [userMessage, setUserMessage] = useState('');
@@ -67,7 +67,6 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     if (id) {
       fetchMaterialDetails();
-      fetchChatHistory();
     }
   }, [id]);
 
@@ -81,18 +80,6 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
       toast.error('Failed to fetch material details');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchChatHistory = async () => {
-    try {
-      const response = await fetch(`/api/materials/${id}/chat`);
-      if (response.ok) {
-        const data = await response.json();
-        setChatMessages(data.messages || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch chat history:', error);
     }
   };
 
@@ -117,45 +104,39 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userMessage.trim() || chatLoading) return;
+    const content = userMessage.trim();
+    if (!content || chatLoading) return;
 
-    const message = userMessage.trim();
-    setUserMessage('');
-    setChatLoading(true);
-
-    // Add user message to chat
-    const newMessage: ChatMessage = {
+    const newUserMessage: Message = {
       id: Date.now().toString(),
-      message,
-      response: '',
+      content,
+      role: 'user',
       timestamp: new Date().toISOString(),
     };
 
-    setChatMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [...prev, newUserMessage]);
+    setUserMessage('');
+    setChatLoading(true);
 
     try {
       const response = await fetch(`/api/materials/${id}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message: content }),
       });
 
-      if (!response.ok) throw new Error('Failed to send message');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
 
-      const data = await response.json();
-      
-      // Update the message with the response
-      setChatMessages(prev => 
-        prev.map(msg => 
-          msg.id === newMessage.id 
-            ? { ...msg, response: data.response }
-            : msg
-        )
-      );
+      const assistantResponse: Message = await response.json();
+      setMessages(prev => [...prev, assistantResponse]);
+
     } catch (error) {
-      toast.error('Failed to send message');
-      // Remove the failed message
-      setChatMessages(prev => prev.filter(msg => msg.id !== newMessage.id));
+      console.error('Send message error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send message');
+      setMessages(prev => prev.filter(msg => msg.id !== newUserMessage.id));
     } finally {
       setChatLoading(false);
     }
@@ -248,7 +229,7 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-1">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -256,63 +237,90 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
                   File Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
+                  <div className='flex gap-2'>
                     <span className="font-medium">File Type:</span>
-                    <p className="text-muted-foreground">{material.fileType.toUpperCase()}</p>
+                    <p className="text-muted-foreground">
+                      {material.fileType.toUpperCase().startsWith("IMAGE/") ? (
+                        `Image (${material.fileType.split("/")[1].toUpperCase()})`
+                      ) : material.fileType.toUpperCase() === "APPLICATION/PDF" ? (
+                        "PDF"
+                      ) : (
+                        material.fileType
+                      )}
+                    </p>
                   </div>
-                  <div>
+                  <div className='flex gap-2'>
                     <span className="font-medium">File Size:</span>
                     <p className="text-muted-foreground">{formatFileSize(material.fileSize)}</p>
                   </div>
-                  <div>
+                  <div className='flex gap-2'>
                     <span className="font-medium">Uploaded:</span>
                     <p className="text-muted-foreground">{formatDate(material.uploadedAt)}</p>
                   </div>
-                  <div>
+                  <div className='flex gap-2'>
                     <span className="font-medium">Subject:</span>
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
+                      <div
+                        className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: material.subject.color }}
                       />
                       <span className="text-muted-foreground">{material.subject.name}</span>
                     </div>
                   </div>
                 </div>
+                <div className='flex gap-2 items-center'>
+                  <span className="font-medium">Tags:</span>
+                  {material.materialTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {material.materialTags.map((mt) => (
+                        <Badge
+                          key={mt.tag.id}
+                          variant="secondary"
+                          style={{
+                            backgroundColor: mt.tag.color + '20',
+                            color: mt.tag.color,
+                            border: `1px solid ${mt.tag.color}40`
+                          }}
+                        >
+                          {mt.tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground mt-2">No tags assigned</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Tag className="h-5 w-5" />
-                  Tags
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {material.materialTags.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {material.materialTags.map((mt) => (
-                      <Badge
-                        key={mt.tag.id}
-                        variant="secondary"
-                        style={{
-                          backgroundColor: mt.tag.color + '20',
-                          color: mt.tag.color,
-                          border: `1px solid ${mt.tag.color}40`
-                        }}
-                      >
-                        {mt.tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No tags assigned</p>
-                )}
-              </CardContent>
-            </Card>
+          </div>
+          {/* Display actual material file */}
+          <div className="w-full flex justify-center mt-6">
+            {material.fileType.startsWith('image/') ? (
+              <img
+                src={material.fileUrl}
+                alt={material.fileName}
+                className="max-h-[500px] rounded shadow border"
+                style={{ maxWidth: '100%' }}
+              />
+            ) : material.fileType === 'application/pdf' ? (
+              <iframe
+                src={material.fileUrl}
+                title={material.fileName}
+                className="w-full h-[600px] rounded shadow border"
+                style={{ minHeight: 400 }}
+              />
+            ) : (
+              <a
+                href={material.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                View or download file
+              </a>
+            )}
           </div>
         </TabsContent>
 
@@ -350,20 +358,15 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
             <CardContent className="space-y-4">
               {/* Chat Messages */}
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {chatMessages.length === 0 ? (
+                {messages.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <MessageSquare className="mx-auto h-8 w-8 mb-2" />
                     <p>Start a conversation about this material</p>
                   </div>
                 ) : (
-                  chatMessages.map((message) => (
+                  messages.map((message) => (
                     <div key={message.id} className="space-y-2">
-                      <ChatMessageBubble
-                        message={message.message}
-                        response={message.response}
-                        timestamp={message.timestamp}
-                        isLoading={chatLoading && message.id === chatMessages[chatMessages.length - 1]?.id}
-                      />
+                      <ChatMessageBubble message={message} />
                     </div>
                   ))
                 )}
