@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Calendar, BookOpen, Copy, Share2 } from 'lucide-react';
+import { Plus, Users, Calendar, BookOpen, Copy, Share2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -34,11 +34,20 @@ interface Member {
 
 interface Material {
   id: string;
-  material: {
-    id: string;
-    fileUrl: string;
-    fileType: string;
+  title: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  uploadedAt: string;
+  subject: {
+    name: string;
+    color: string;
   };
+}
+
+interface GroupMaterial {
+  id: string;
+  material: Material;
 }
 
 interface StudyGroup {
@@ -47,7 +56,7 @@ interface StudyGroup {
   description: string;
   createdAt: Date;
   members: Member[];
-  materials: Material[];
+  materials: GroupMaterial[];
 }
 
 export default function StudyGroupsPage() {
@@ -62,8 +71,8 @@ export default function StudyGroupsPage() {
   const [inviteCode, setInviteCode] = useState('');
   const [materialsDialogOpen, setMaterialsDialogOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [groupMaterials, setGroupMaterials] = useState<any[]>([]);
-  const [userMaterials, setUserMaterials] = useState<any[]>([]);
+  const [groupMaterials, setGroupMaterials] = useState<GroupMaterial[]>([]);
+  const [userMaterials, setUserMaterials] = useState<Material[]>([]);
   const [shareLoading, setShareLoading] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -179,6 +188,21 @@ export default function StudyGroupsPage() {
     }
   };
 
+  const handleUnshareMaterial = async (materialId: string) => {
+    if (!selectedGroupId) return;
+    try {
+      const res = await fetch(`/api/groups/${selectedGroupId}/materials?materialId=${materialId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to remove material');
+      toast.success('Material removed from group');
+      const groupRes = await fetch(`/api/groups/${selectedGroupId}/materials`);
+      if (groupRes.ok) setGroupMaterials(await groupRes.json());
+    } catch {
+      toast.error('Failed to remove material');
+    }
+  };
+
   const handleCopy = async () => {
     if (!inviteCode) return;
     try {
@@ -186,6 +210,22 @@ export default function StudyGroupsPage() {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 1200);
     } catch {}
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -365,41 +405,64 @@ export default function StudyGroupsPage() {
             <DialogHeader>
               <DialogTitle>Group Materials</DialogTitle>
             </DialogHeader>
-            <div className="mb-2">
-              <h4 className="font-medium mb-1">Shared in Group</h4>
+            <div className="mb-4">
+              <h4 className="font-medium mb-2">Shared in Group</h4>
               {groupMaterials.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No materials shared yet.</p>
               ) : (
-                <ul className="list-disc pl-5 space-y-1">
-                  {groupMaterials.map((mat) => (
-                    <li key={mat.id} className="text-sm">{mat.title}</li>
-                  ))}
-                </ul>
+                <div className="space-y-2">
+                  {groupMaterials.map((groupMaterial) => {
+                    const material = groupMaterial.material;
+                    return (
+                      <div key={groupMaterial.id} className="flex items-center justify-between p-2 border rounded">
+                        <div>
+                          <p className="text-sm font-medium">{material.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {material.subject.name} • {formatFileSize(material.fileSize)}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUnshareMaterial(material.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
             <div>
-              <h4 className="font-medium mb-1">Share Your Material</h4>
+              <h4 className="font-medium mb-2">Share Your Material</h4>
               {userMaterials.length === 0 ? (
                 <p className="text-muted-foreground text-sm">You have no uploaded materials.</p>
               ) : (
-                <ul className="list-disc pl-5 space-y-1">
-                  {userMaterials.map((mat) => (
-                    <li key={mat.id} className="flex items-center gap-2">
-                      <span>{mat.title}</span>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        disabled={shareLoading || groupMaterials.some((g) => g.id === mat.id)}
-                        onClick={() => handleShareMaterial(mat.id)}
-                      >
-                        Share
-                      </Button>
-                      {groupMaterials.some((g) => g.id === mat.id) && (
-                        <span className="text-xs text-green-600">Shared</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-2">
+                  {userMaterials
+                    .filter(material => 
+                      !groupMaterials.some(gm => gm.material.id === material.id)
+                    )
+                    .map((material) => (
+                      <div key={material.id} className="flex items-center justify-between p-2 border rounded">
+                        <div>
+                          <p className="text-sm font-medium">{material.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {material.subject.name} • {formatFileSize(material.fileSize)}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={shareLoading}
+                          onClick={() => handleShareMaterial(material.id)}
+                        >
+                          Share
+                        </Button>
+                      </div>
+                    ))}
+                </div>
               )}
             </div>
           </DialogContent>
