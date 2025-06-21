@@ -5,14 +5,14 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params
 
     try {
         const materials = await prisma.material.findMany({
@@ -42,13 +42,13 @@ export async function GET(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
-    const { id } = await params;
+    const { id } = params
     try {
         await prisma.tag.delete({
             where: {

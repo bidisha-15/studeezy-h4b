@@ -3,13 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-    const {id } = await params;
+    const {id } = params
     const group = await prisma.studyGroup.findUnique({
       where: { id },
       include: {
@@ -30,13 +30,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function POST(req: NextRequest,{ params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest,{ params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-    const {id } = await params;
+    const {id } = params
     const { userId } = await req.json();
     if (!userId) return new NextResponse('Missing userId', { status: 400 });
     // Check if current user is admin

@@ -15,7 +15,7 @@ interface ChatResponse {
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const body = await req.json() as ChatMessage;
@@ -26,7 +26,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    const {id} = await params;
+    const {id} = params
 
     const material = await prisma.material.findUnique({
       where: { id },

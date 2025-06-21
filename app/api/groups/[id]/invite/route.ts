@@ -5,16 +5,15 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: Request,
-{ params }: { params: Promise<{ id: string }> }) {
+{ params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params
 
-    // Check if user is a member of the group
     const membership = await prisma.groupMember.findFirst({
       where: {
         groupId: id,
@@ -26,7 +25,6 @@ export async function GET(
       return new NextResponse('Not a member of this group', { status: 403 });
     }
 
-    // Get the group with invite code
     const group = await prisma.studyGroup.findUnique({
       where: { id },
       select: { inviteCode: true },

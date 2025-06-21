@@ -5,7 +5,7 @@ import {prisma} from '@/lib/prisma';
 
 export async function DELETE(
   request: Request,
- { params }: { params: Promise<{ id: string }> }
+ { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,7 @@ export async function DELETE(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const {id} = await params;
+    const {id} = params
 
     const plan = await prisma.aiStudyPlan.findUnique({
       where: {

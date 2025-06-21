@@ -5,14 +5,14 @@ import {prisma} from '@/lib/prisma';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-    const { id } = await params;
+    const { id } = params
 
     const quiz = await prisma.quiz.findUnique({
       where: {
