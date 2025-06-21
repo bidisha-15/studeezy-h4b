@@ -4,10 +4,9 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-  req: NextRequest,
   context: { params: { id: string } }
 ) {
-  const { id } = context.params
+  const { id } = context.params;
 
   try {
     const material = await prisma.material.findUnique({
@@ -31,7 +30,7 @@ export async function GET(
 
 
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -39,10 +38,11 @@ export async function PUT(
 
   const body = await req.json();
   const { subjectId, tagIds } = body;
+  const {id} = context.params;
 
   try {
     const updatedMaterial = await prisma.material.update({
-      where: { id: (await params).id },
+      where: { id },
       data: {
         subjectId,
         materialTags: {
@@ -66,15 +66,15 @@ export async function PUT(
 
 // DELETE material
 export async function DELETE(
-  req: Request,
   context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const {id} = context.params;
   try {
     await prisma.material.delete({
-      where: { id: (await params).id },
+      where: { id },
     });
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (err) {

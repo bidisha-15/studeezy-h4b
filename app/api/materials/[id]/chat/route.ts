@@ -26,7 +26,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    const {id} = params
+    const {id} = context.params;
 
     const material = await prisma.material.findUnique({
       where: { id },

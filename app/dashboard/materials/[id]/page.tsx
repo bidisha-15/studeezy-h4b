@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -45,7 +45,7 @@ interface Material {
 }
 
 export default function MaterialDetailPage(context: { params: { id: string } }) {
-  const { id } = use(params);
+  const { id } = context.params;
   const router = useRouter();
   const [material, setMaterial] = useState<Material | null>(null);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);

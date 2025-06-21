@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-    const {id } = params
+    const {id } = context.params
     const group = await prisma.studyGroup.findUnique({
       where: { id },
       include: {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest,context: { params: { id: string } })
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-    const {id } = params
+    const {id } = context.params
     const { userId } = await req.json();
     if (!userId) return new NextResponse('Missing userId', { status: 400 });
     // Check if current user is admin
