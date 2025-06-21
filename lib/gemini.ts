@@ -37,7 +37,8 @@ export async function askGemini(prompt: string): Promise<string> {
     const json: GeminiResponse = await response.json();
 
     if (!json.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response format from Gemini');
+      console.error('Invalid response format from Gemini:', JSON.stringify(json));
+      return 'No response from Gemini.';
     }
 
     return json.candidates[0].content.parts[0].text;

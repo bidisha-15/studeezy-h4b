@@ -5,11 +5,6 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-
     const tags = await prisma.tag.findMany({
       orderBy: {
         name: 'asc',
@@ -43,5 +38,3 @@ export async function POST(req: NextRequest) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
-
-// export async function DELETE 

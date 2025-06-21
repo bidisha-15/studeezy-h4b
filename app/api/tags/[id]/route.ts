@@ -1,59 +1,64 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(context: { params: { id: string } }
+export async function GET(
+    req: Request,
+    { params }: { params: { id: string } }
 ) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-        return new NextResponse('Unauthorized', { status: 401 });
-    }
-
-    const { id } = context.params
-
+    const { id } = params;
     try {
-        const materials = await prisma.material.findMany({
-            where: {
-                materialTags: {
-                    some: {
-                        tagId: id
-                    }
-                }
-            },
-            include: {
-                subject: true,
-                materialTags: {
-                    include: {
-                        tag: true
-                    }
-                }
-            }
+        const tag = await prisma.tag.findUnique({
+            where: { id },
         });
-
-        return NextResponse.json(materials);
+        if (!tag) {
+            return new NextResponse('Tag not found', { status: 404 });
+        }
+        return NextResponse.json(tag);
     } catch (error) {
-        console.error('Error fetching materials by tag:', error);
+        console.error('Error fetching tag:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
     }
 }
 
-export async function DELETE(context: { params: { id: string } }
+export async function PATCH(
+    req: NextRequest,
+    { params }: { params: { id: string } }
 ) {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
-    const { id } = context.params
+    const { id } = params;
+    try {
+        const { name, color } = await req.json();
+        const updatedTag = await prisma.tag.update({
+            where: { id },
+            data: { name, color },
+        });
+        return NextResponse.json(updatedTag);
+    } catch (error) {
+        console.error('Error updating tag:', error);
+        return new NextResponse('Internal Server Error', { status: 500 });
+    }
+}
+
+export async function DELETE(
+    req: Request,
+    { params }: { params: { id: string } }
+) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
+    const id = params.id;
     try {
         await prisma.tag.delete({
-            where: {
-                id
-            }
+            where: { id }
         });
         return NextResponse.json({ msg: "Tag deleted" }, { status: 200 });
     } catch (error) {
-        console.error("Failed to delete tag:", error);
         return NextResponse.json({ msg: "Failed to delete tag" }, { status: 500 });
     }
 }

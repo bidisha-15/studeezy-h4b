@@ -1,36 +1,46 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Brain,
+  FileText,
   MessageSquare,
+  Zap,
   Upload,
   BookOpen,
   Users,
   TrendingUp,
   Star,
   ArrowRight,
+  Moon,
+  Sun,
   Sparkles,
   CheckCircle,
   Github,
   Twitter,
-  Mail
-} from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { UserNav } from '@/components/UserNav';
+  Mail,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserNav } from "@/components/UserNav";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 };
 
 const itemVariants = {
@@ -38,8 +48,8 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: "easeOut" as const }
-  }
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
 };
 
 const Header = () => {
@@ -65,28 +75,53 @@ const Header = () => {
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <a
+              href="#features"
+              className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
               Features
             </a>
-            <a href="#testimonials" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <a
+              href="#testimonials"
+              className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
               Testimonials
             </a>
-            <a href="#pricing" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <a
+              href="#pricing"
+              className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
               Pricing
             </a>
+            {status === "authenticated" && (
+              <a
+                href="/dashboard"
+                className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                Dashboard
+              </a>
+            )}
+
             <ThemeToggle />
 
             <div className="flex items-center gap-x-2">
-              {status === 'loading' ? (
+              {status === "loading" ? (
                 <div className="h-10 w-28 animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-              ) : status === 'authenticated' ? (
+              ) : status === "authenticated" ? (
                 <UserNav />
               ) : (
                 <>
-                  <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50" onClick={() => router.push('/signin')}>
+                  <Button
+                    variant="outline"
+                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    onClick={() => router.push("/signin")}
+                  >
                     Sign In
                   </Button>
-                  <Button className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700" onClick={() => router.push('/signup')}>
+                  <Button
+                    className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700"
+                    onClick={() => router.push("/signup")}
+                  >
                     Get Started
                   </Button>
                 </>
@@ -97,8 +132,18 @@ const Header = () => {
           <div className="md:hidden flex items-center space-x-2">
             <ThemeToggle />
             <Button variant="ghost" size="icon">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </Button>
           </div>
@@ -117,7 +162,10 @@ const Hero = () => (
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={itemVariants} className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium mb-8">
+        <motion.div
+          variants={itemVariants}
+          className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium mb-8"
+        >
           <Sparkles className="h-4 w-4 mr-2" />
           AI-Powered Study Revolution
         </motion.div>
@@ -136,8 +184,9 @@ const Hero = () => (
           variants={itemVariants}
           className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed"
         >
-          Upload your documents, extract text with OCR, chat with your study materials, and organize notes like never before.
-          Let AI be your personal study assistant.
+          Upload your documents, extract text with OCR, chat with your study
+          materials, and organize notes like never before. Let AI be your
+          personal study assistant.
         </motion.p>
 
         <motion.div
@@ -187,43 +236,52 @@ const Features = () => {
     {
       icon: Upload,
       title: "Smart Document Upload",
-      description: "Upload PDFs, images, and documents. Our OCR technology extracts text with 99% accuracy.",
-      color: "from-blue-500 to-blue-600"
+      description:
+        "Upload PDFs, images, and documents. Our OCR technology extracts text with 99% accuracy.",
+      color: "from-blue-500 to-blue-600",
     },
     {
       icon: MessageSquare,
       title: "AI Chat with Documents",
-      description: "Ask questions about your study materials and get instant, contextual answers powered by AI.",
-      color: "from-violet-500 to-violet-600"
+      description:
+        "Ask questions about your study materials and get instant, contextual answers powered by AI.",
+      color: "from-violet-500 to-violet-600",
     },
     {
       icon: Brain,
       title: "AI-Generated Flashcards",
-      description: "Automatically create flashcards from your content. Perfect for memorization and quick reviews.",
-      color: "from-emerald-500 to-emerald-600"
+      description:
+        "Automatically create flashcards from your content. Perfect for memorization and quick reviews.",
+      color: "from-emerald-500 to-emerald-600",
     },
     {
       icon: BookOpen,
       title: "Smart Note Organization",
-      description: "AI categorizes and tags your notes automatically. Find what you need in seconds.",
-      color: "from-orange-500 to-orange-600"
+      description:
+        "AI categorizes and tags your notes automatically. Find what you need in seconds.",
+      color: "from-orange-500 to-orange-600",
     },
     {
       icon: Users,
       title: "Study Groups",
-      description: "Collaborate with classmates, share notes, and study together in virtual study rooms.",
-      color: "from-pink-500 to-pink-600"
+      description:
+        "Collaborate with classmates, share notes, and study together in virtual study rooms.",
+      color: "from-pink-500 to-pink-600",
     },
     {
       icon: TrendingUp,
       title: "Progress Tracking",
-      description: "Monitor your learning progress with detailed analytics and personalized study recommendations.",
-      color: "from-cyan-500 to-cyan-600"
-    }
+      description:
+        "Monitor your learning progress with detailed analytics and personalized study recommendations.",
+      color: "from-cyan-500 to-cyan-600",
+    },
   ];
 
   return (
-    <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+    <section
+      id="features"
+      className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900"
+    >
       <div className="max-w-7xl mx-auto">
         <motion.div
           className="text-center mb-16"
@@ -239,7 +297,8 @@ const Features = () => {
             </span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Everything you need to transform your study experience and achieve academic excellence
+            Everything you need to transform your study experience and achieve
+            academic excellence
           </p>
         </motion.div>
 
@@ -254,7 +313,9 @@ const Features = () => {
             <motion.div key={index} variants={itemVariants}>
               <Card className="h-full hover:shadow-lg transition-all duration-300 border-0 shadow-md hover:shadow-xl hover:-translate-y-1">
                 <CardHeader>
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4`}>
+                  <div
+                    className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4`}
+                  >
                     <feature.icon className="h-6 w-6 text-white" />
                   </div>
                   <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -281,30 +342,36 @@ const Testimonials = () => {
       name: "Sarah Chen",
       role: "Medical Student",
       university: "Stanford University",
-      content: "Studeezy transformed how I study for my medical exams. The AI-generated flashcards from my textbooks saved me hours of preparation time.",
+      content:
+        "Studeezy transformed how I study for my medical exams. The AI-generated flashcards from my textbooks saved me hours of preparation time.",
       avatar: "SC",
-      rating: 5
+      rating: 5,
     },
     {
       name: "Marcus Rodriguez",
       role: "Computer Science Major",
       university: "MIT",
-      content: "Being able to chat with my programming textbooks and get instant explanations is incredible. It's like having a personal tutor 24/7.",
+      content:
+        "Being able to chat with my programming textbooks and get instant explanations is incredible. It's like having a personal tutor 24/7.",
       avatar: "MR",
-      rating: 5
+      rating: 5,
     },
     {
       name: "Emily Watson",
       role: "Law Student",
       university: "Harvard Law",
-      content: "The document organization features are amazing. I can find any case study or legal document in seconds. It's revolutionized my research process.",
+      content:
+        "The document organization features are amazing. I can find any case study or legal document in seconds. It's revolutionized my research process.",
       avatar: "EW",
-      rating: 5
-    }
+      rating: 5,
+    },
   ];
 
   return (
-    <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <section
+      id="testimonials"
+      className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+    >
       <div className="max-w-7xl mx-auto">
         <motion.div
           className="text-center mb-16"
@@ -320,7 +387,8 @@ const Testimonials = () => {
             </span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Join thousands of students who have already transformed their study experience
+            Join thousands of students who have already transformed their study
+            experience
           </p>
         </motion.div>
 
@@ -337,11 +405,14 @@ const Testimonials = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                      <Star
+                        key={i}
+                        className="h-5 w-5 text-yellow-400 fill-current"
+                      />
                     ))}
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 mb-6 italic leading-relaxed">
-                    &quot;{testimonial.content}&quot;
+                    "{testimonial.content}"
                   </p>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full flex items-center justify-center text-white font-semibold mr-4">
@@ -382,7 +453,8 @@ const CTA = () => (
           Ready to Transform Your Study Experience?
         </h2>
         <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-          Join thousands of students who are already studying smarter with AI-powered tools
+          Join thousands of students who are already studying smarter with
+          AI-powered tools
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button
@@ -417,16 +489,29 @@ const Footer = () => (
             <span className="text-xl font-bold">Studeezy</span>
           </div>
           <p className="text-gray-400 mb-6 max-w-md">
-            Empowering students worldwide with AI-powered study tools. Transform your learning experience and achieve academic excellence.
+            Empowering students worldwide with AI-powered study tools. Transform
+            your learning experience and achieve academic excellence.
           </p>
           <div className="flex space-x-4">
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white"
+            >
               <Twitter className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white"
+            >
               <Github className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white"
+            >
               <Mail className="h-5 w-5" />
             </Button>
           </div>
@@ -435,20 +520,52 @@ const Footer = () => (
         <div>
           <h3 className="font-semibold mb-4">Product</h3>
           <ul className="space-y-2 text-gray-400">
-            <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">API</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">AI Integrations</a></li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                Features
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                Pricing
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                API
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                AI Integrations
+              </a>
+            </li>
           </ul>
         </div>
 
         <div>
           <h3 className="font-semibold mb-4">Company</h3>
           <ul className="space-y-2 text-gray-400">
-            <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                About
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                Blog
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                Careers
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-white transition-colors">
+                Contact
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -458,10 +575,16 @@ const Footer = () => (
           © 2025 Studeezy. All rights reserved.
         </p>
         <div className="flex space-x-6 mt-4 sm:mt-0">
-          <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
+          <a
+            href="#"
+            className="text-gray-400 hover:text-white text-sm transition-colors"
+          >
             Privacy Policy
           </a>
-          <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
+          <a
+            href="#"
+            className="text-gray-400 hover:text-white text-sm transition-colors"
+          >
             Terms of Service
           </a>
         </div>

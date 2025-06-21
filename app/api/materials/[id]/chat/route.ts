@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { askGemini } from '@/lib/gemini'; 
+import { getCompletion } from '@/lib/geminiServices'; 
 
 interface ChatMessage {
   message: string;
@@ -14,11 +14,12 @@ interface ChatResponse {
 }
 
 export async function POST(
-  req: NextRequest,
-  context: { params: { id: string } }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     const body = await req.json() as ChatMessage;
+    console.log(body);
     
     if (!body.message?.trim()) {
       return NextResponse.json(
@@ -26,7 +27,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    const {id} = context.params;
+    const {id} = await params;
 
     const material = await prisma.material.findUnique({
       where: { id },
@@ -42,7 +43,9 @@ export async function POST(
         { status: 404 }
       );
     }
+    console.log(material);
 
+    
     if (!material.processedText) {
       return NextResponse.json(
         { error: 'No processed text available for this material' },
@@ -51,11 +54,14 @@ export async function POST(
     }
 
     const prompt = `Document: ${material.processedText}\n\nUser Query: ${body.message}`;
-    const geminiResponse = await askGemini(prompt);
+    console.log("bckedn propt---->", prompt);
+    const geminiResponse = await getCompletion(prompt);
+
+    console.log('Gemini API returned:', geminiResponse);
 
     const response: ChatResponse = {
       id: Date.now().toString(),
-      content: geminiResponse,
+      content: geminiResponse || 'No response from Gemini.',
       role: 'assistant',
       timestamp: new Date().toISOString(),
     };
@@ -77,3 +83,4 @@ export async function POST(
     );
   }
 }
+

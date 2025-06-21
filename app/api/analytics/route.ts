@@ -10,7 +10,6 @@ export async function GET() {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // Get user's materials with subjects
     const materials = await prisma.material.findMany({
       where: { userId: session.user.id },
       include: {
@@ -18,8 +17,7 @@ export async function GET() {
         flashcards: true
       },
     });
-
-    // Get user's quizzes
+    
     const quizzes = await prisma.quiz.findMany({
       where: { userId: session.user.id },
       include: { questions: true },
