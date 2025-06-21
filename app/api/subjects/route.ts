@@ -6,10 +6,11 @@ import {prisma} from '@/lib/prisma';
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
+    console.log(session);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-
+    
     const subjects = await prisma.subject.findMany({
       where: {
         userId: session.user.id,
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { name, code } = body;
+    console.log(name, code);
 
     if (!name || !code) {
       return new NextResponse('Missing required fields', { status: 400 });

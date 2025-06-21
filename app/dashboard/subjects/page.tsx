@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import axios from 'axios';
 
 interface Subject {
   id: string;
@@ -25,15 +28,25 @@ interface Subject {
 }
 
 export default function SubjectsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newSubject, setNewSubject] = useState({ name: '', code: '' });
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
-
   useEffect(() => {
-    fetchSubjects();
-  }, []);
+    if (status === 'loading') return;
+    
+    if (status === 'unauthenticated') {
+      router.push('/signin');
+      return;
+    }
+    
+    if (status === 'authenticated') {
+      fetchSubjects();
+    }
+  }, [status, router]);
 
   const fetchSubjects = async () => {
     try {
@@ -47,16 +60,11 @@ export default function SubjectsPage() {
 
   const handleCreateSubject = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(newSubject);
     try {
-      const response = await fetch('/api/subjects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newSubject),
-      });
+      const response = await axios.post('/api/subjects', newSubject);
 
-      if (!response.ok) throw new Error('Failed to create subject');
+      if (response.status != 200) throw new Error('Failed to create subject');
 
       toast.success("Subject created successfully");
       setIsDialogOpen(false);
@@ -68,7 +76,7 @@ export default function SubjectsPage() {
   };
 
   const handleDeleteSubject = async (id: string) => {
-    if (deletingId === id) return; // Prevent double-clicking
+    if (deletingId === id) return; 
     
     setDeletingId(id);
     try {
@@ -86,6 +94,25 @@ export default function SubjectsPage() {
       setDeletingId(null);
     }
   };
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (status === 'unauthenticated') {
+    return null;
+  }
 
   return (
     <DashboardLayout>
