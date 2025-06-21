@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -206,7 +206,7 @@ export default function QuizzesPage() {
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -433,6 +433,6 @@ export default function QuizzesPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }

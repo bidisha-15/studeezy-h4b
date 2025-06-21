@@ -1,15 +1,24 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { FileText, Calendar, BookOpen, ArrowLeft, Upload } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
-
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { 
+  ArrowLeft, 
+  BookOpen, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  FileText,
+  Calendar,
+  Tag
+} from 'lucide-react';
 
 interface Material {
   id: string;
@@ -18,14 +27,12 @@ interface Material {
   fileType: string;
   fileSize: number;
   uploadedAt: string;
-  processedText?: string;
   subject: {
-    id: string;
     name: string;
+    color: string;
   };
   materialTags: {
     tag: {
-      id: string;
       name: string;
       color: string;
     };
@@ -35,35 +42,85 @@ interface Material {
 interface Subject {
   id: string;
   name: string;
-}
-
-interface SubjectData {
-  subject: Subject;
+  code: string;
+  color: string;
   materials: Material[];
 }
 
-export default function MaterialsBySubject({ params }:  { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const [subjectData, setSubjectData] = useState<SubjectData | null>(null);
+export default function SubjectDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const subjectId = params.id as string;
+
+  const [subject, setSubject] = useState<Subject | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [subjectName, setSubjectName] = useState('');
+  const [subjectCode, setSubjectCode] = useState('');
+  const [subjectColor, setSubjectColor] = useState('#3B82F6');
 
   useEffect(() => {
-    fetchMaterialsBySubject();
-  }, [id]);
+    if (subjectId) {
+      fetchSubjectDetails();
+    }
+  }, [subjectId]);
 
-  const fetchMaterialsBySubject = async () => {
+  const fetchSubjectDetails = async () => {
     try {
-      const response = await axios.get(`/api/subjects/${id}/materials`);
-      if (response.status != 200) {
-        throw new Error('Failed to fetch materials');
-      }
-      const data = response.data;
-      setSubjectData(data);
+      const response = await fetch(`/api/subjects/${subjectId}`);
+      if (!response.ok) throw new Error('Failed to fetch subject details');
+      const data = await response.json();
+      setSubject(data);
+      setSubjectName(data.name);
+      setSubjectCode(data.code);
+      setSubjectColor(data.color || '#3B82F6');
     } catch (error) {
-      console.error('Error fetching materials by subject:', error);
-      toast.error('Failed to fetch materials');
+      toast.error('Failed to fetch subject details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateSubject = async () => {
+    if (!subjectName.trim()) return;
+
+    try {
+      const response = await fetch(`/api/subjects/${subjectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: subjectName,
+          code: subjectCode,
+          color: subjectColor,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update subject');
+
+      toast.success('Subject updated successfully!');
+      setEditMode(false);
+      fetchSubjectDetails();
+    } catch (error) {
+      toast.error('Failed to update subject');
+    }
+  };
+
+  const handleDeleteSubject = async () => {
+    if (!confirm('Are you sure you want to delete this subject? This will also delete all associated materials.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/subjects/${subjectId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete subject');
+
+      toast.success('Subject deleted successfully!');
+      router.push('/dashboard/subjects');
+    } catch (error) {
+      toast.error('Failed to delete subject');
     }
   };
 
@@ -85,162 +142,170 @@ export default function MaterialsBySubject({ params }:  { params: Promise<{ id: 
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard/subjects">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div className="h-8 bg-muted rounded animate-pulse w-48" />
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
-            ))}
-          </div>
+      <div className="space-y-6">
+        <div className="h-8 bg-muted rounded animate-pulse w-48" />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
+          ))}
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
-  if (!subjectData) {
+  if (!subject) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-            <BookOpen className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Subject not found</h3>
-          <p className="text-muted-foreground mb-6">
-            The subject you're looking for doesn't exist or you don't have access to it.
-          </p>
-          <Button asChild>
-            <Link href="/dashboard/subjects">
-              Back to Subjects
-            </Link>
-          </Button>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold">Subject not found</h1>
+        <Button asChild className="mt-4">
+          <Link href="/dashboard/subjects">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Subjects
+          </Link>
+        </Button>
+      </div>
     );
   }
-
-  const { subject, materials } = subjectData;
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard/subjects">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {subject.name}
-              </h1>
-              <p className="text-muted-foreground">
-                {materials.length} material{materials.length !== 1 ? 's' : ''} in this subject
-              </p>
-            </div>
-          </div>
-          <Button asChild>
-            <Link href="/dashboard/materials">
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Material
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/dashboard/subjects">
+              <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{subject.name}</h1>
+            <p className="text-muted-foreground">Subject Code: {subject.code}</p>
+          </div>
         </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setEditMode(!editMode)}>
+            <Edit className="mr-2 h-4 w-4" />
+            {editMode ? 'Cancel' : 'Edit'}
+          </Button>
+          <Button variant="destructive" onClick={handleDeleteSubject}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </Button>
+        </div>
+      </div>
 
-        {materials.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {materials.map((material) => (
-              <Card key={material.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="line-clamp-2">{material.title}</span>
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                  </CardTitle>
-                  <CardDescription>
+      {/* Edit Form */}
+      {editMode && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Subject</CardTitle>
+            <CardDescription>Update subject information</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Subject Name</label>
+              <Input
+                value={subjectName}
+                onChange={(e) => setSubjectName(e.target.value)}
+                placeholder="Enter subject name"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Subject Code</label>
+              <Input
+                value={subjectCode}
+                onChange={(e) => setSubjectCode(e.target.value)}
+                placeholder="Enter subject code"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Color</label>
+              <Input
+                type="color"
+                value={subjectColor}
+                onChange={(e) => setSubjectColor(e.target.value)}
+                className="w-20 h-10"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditMode(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateSubject}>Update Subject</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Materials */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Materials ({subject.materials.length})
+          </CardTitle>
+          <CardDescription>
+            Study materials for this subject
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {subject.materials.length === 0 ? (
+            <div className="text-center py-8">
+              <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No materials yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Upload your first study material for this subject.
+              </p>
+              <Button asChild>
+                <Link href="/dashboard/materials">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Upload Material
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {subject.materials.map((material) => (
+                <Card key={material.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      {material.title}
+                    </CardTitle>
+                    <CardDescription>{material.fileName}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <BookOpen className="h-4 w-4" />
-                      {material.subject.name}
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {material.materialTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {material.materialTags.map((materialTag) => (
-                        <Badge
-                          key={materialTag.tag.id}
-                          variant="secondary"
-                          style={{
-                            backgroundColor: materialTag.tag.color + '20',
-                            color: materialTag.tag.color,
-                            border: `1px solid ${materialTag.tag.color}40`
-                          }}
-                        >
-                          {materialTag.tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       <span>{formatDate(material.uploadedAt)}</span>
                     </div>
-                    <span>{formatFileSize(material.fileSize)}</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button asChild className="flex-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>{formatFileSize(material.fileSize)}</span>
+                      <span>•</span>
+                      <span>{material.fileType.toUpperCase()}</span>
+                    </div>
+                    {material.materialTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {material.materialTags.map((mt) => (
+                          <Badge key={mt.tag.name} variant="secondary" className="text-xs">
+                            <Tag className="h-3 w-3 mr-1" />
+                            {mt.tag.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    <Button asChild size="sm" className="w-full">
                       <Link href={`/dashboard/materials/${material.id}`}>
                         View Material
                       </Link>
                     </Button>
-                    {material.processedText && (
-                      <Button variant="outline" size="icon" asChild>
-                        <Link href={`/dashboard/materials/${material.id}#chat`}>
-                          <FileText className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-              <FileText className="h-12 w-12 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            <h3 className="text-lg font-semibold mb-2">No materials yet</h3>
-            <p className="text-muted-foreground mb-6">
-              You haven't uploaded any materials for {subject.name} yet.
-            </p>
-            <div className="flex gap-2 justify-center">
-              <Button asChild>
-                <Link href="/dashboard/materials">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Material
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/dashboard/subjects">
-                  Back to Subjects
-                </Link>
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 } 

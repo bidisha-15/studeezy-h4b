@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-// import { mockUser } from '@/lib/mockData';
 import { User, Settings, LogOut } from 'lucide-react';
 
 export function Navbar() {

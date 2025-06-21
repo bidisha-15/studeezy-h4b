@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -98,14 +98,14 @@ export default function SubjectsPage() {
   // Show loading state while checking authentication
   if (status === 'loading') {
     return (
-      <DashboardLayout>
+      
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
             <p className="mt-2 text-muted-foreground">Loading...</p>
           </div>
         </div>
-      </DashboardLayout>
+      
     );
   }
 
@@ -115,7 +115,7 @@ export default function SubjectsPage() {
   }
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -217,6 +217,6 @@ export default function SubjectsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }

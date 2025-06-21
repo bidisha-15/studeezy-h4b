@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -112,7 +112,7 @@ export default function FlashcardsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      
         <div className="space-y-6">
           <div className="h-8 bg-muted rounded animate-pulse w-48" />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -121,12 +121,12 @@ export default function FlashcardsPage() {
             ))}
           </div>
         </div>
-      </DashboardLayout>
+      
     );
   }
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -255,6 +255,6 @@ export default function FlashcardsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+
 import { AnalyticsChartCard } from '@/components/analytics/analytics-chart-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Clock, Target, Award } from 'lucide-react';
@@ -52,7 +52,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
         </div>
-      </DashboardLayout>
+      
     );
   }
 
@@ -80,7 +80,7 @@ export default function AnalyticsPage() {
   const weeklyStudyHours = analytics.weeklyStudyTime.reduce((sum: number, day) => sum + day.hours, 0);
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
@@ -205,6 +205,6 @@ export default function AnalyticsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }
