@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, BookOpen, Trash2, Edit2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface Question {
   id: string;
@@ -403,9 +404,11 @@ export default function QuizzesPage() {
                   </p>
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>{quiz.questions.length} questions</span>
+                    <Link href={`/dashboard/quizzes/quiz/${quiz.id}`}>
                     <Button variant="outline" size="sm">
                       Start Quiz
                     </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
