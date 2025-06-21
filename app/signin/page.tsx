@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,11 +21,26 @@ import { Brain, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +60,6 @@ export default function LoginPage() {
       }
 
     } catch (error) {
-      console.error("An error occurred during sign in:", error);
       toast.error("An error occurred during sign in");
     } finally {
       setIsLoading(false);
@@ -95,11 +112,11 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <Alert className="bg-blue-50 border-blue-200">
+              {/* <Alert className="bg-blue-50 border-blue-200">
                 <AlertDescription className="text-sm text-blue-800">
                   Demo credentials: 
                 </AlertDescription>
-              </Alert>
+              </Alert> */}
 
               <Button
                 type="submit"
@@ -117,12 +134,12 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-            <Button className="w-full">
+            {/* <Button className="w-full">
               Use Demo Credentials
-            </Button>
+            </Button> */}
 
             <div className="text-center text-sm">
-              <span className="text-gray-600">Don&apos;t have an account? </span>
+              <span className="text-gray-600">Don't have an account? </span>
               <Link
                 href="/signup"
                 className="text-blue-600 hover:underline font-medium"

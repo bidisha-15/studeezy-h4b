@@ -17,16 +17,20 @@ import {
   Plus,
   FileText,
   Calendar,
+  Tag,
   Crown,
   UserPlus,
   Share2,
   Eye,
   Download,
+  Settings,
   MoreVertical
 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 
 interface User {
   id: string;
@@ -86,8 +90,10 @@ export default function GroupDetailPage() {
   const groupId = params.id as string;
 
   const [group, setGroup] = useState<StudyGroup | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
   const [materials, setMaterials] = useState<GroupMaterial[]>([]);
   const [userMaterials, setUserMaterials] = useState<Material[]>([]);
+  const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
@@ -106,14 +112,18 @@ export default function GroupDetailPage() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [groupRes, materialsRes, userMaterialsRes] = await Promise.all([
+      const [groupRes, membersRes, materialsRes, userMaterialsRes, inviteRes] = await Promise.all([
         fetch(`/api/groups/${groupId}`),
+        fetch(`/api/groups/${groupId}/members`),
         fetch(`/api/groups/${groupId}/materials`),
         fetch(`/api/materials`),
+        fetch(`/api/groups/${groupId}/invite`),
       ]);
       if (groupRes.ok) setGroup(await groupRes.json());
+      if (membersRes.ok) setMembers(await membersRes.json());
       if (materialsRes.ok) setMaterials(await materialsRes.json());
       if (userMaterialsRes.ok) setUserMaterials(await userMaterialsRes.json());
+      if (inviteRes.ok) setInviteCode((await inviteRes.json()).inviteCode);
       
       // Find current user in members
       const groupData = await groupRes.json();
@@ -130,6 +140,15 @@ export default function GroupDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCopy = async () => {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 1200);
+    } catch {}
   };
 
   const handleShareMaterial = async () => {
@@ -190,7 +209,6 @@ export default function GroupDetailPage() {
       setTimeout(() => setCopySuccess(false), 2000);
       toast.success("Invite code copied to clipboard!");
     } catch (error) {
-      console.error("Failed to copy invite code:", error);
       toast.error("Failed to copy invite code");
     }
   };
@@ -247,9 +265,15 @@ export default function GroupDetailPage() {
     );
   }
 
+  const isAdmin = group.members.find(member => 
+    member.user.id === currentUser?.id
+  )?.role === "ADMIN";
+
+  const isCreator = group.createdBy.id === currentUser?.id;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import {prisma} from '@/lib/prisma';
@@ -35,7 +35,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         materialId: materialId || null,
         questions: {
-          create: questions.map((q: { question: string; options: string[]; answer: string; }) => ({
+          create: questions.map((q: any) => ({
             question: q.question,
             options: q.options,
             answer: q.answer,

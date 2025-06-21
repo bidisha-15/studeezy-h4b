@@ -14,7 +14,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Plus, Users, BookOpen, Copy, Share2, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Users, Calendar, BookOpen, Copy, Share2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -85,7 +86,6 @@ export default function StudyGroupsPage() {
       const data = await response.json();
       setGroups(data);
     } catch (error) {
-      console.error('Failed to fetch study groups:', error);
       toast.error('Failed to fetch study groups');
     } finally {
       setLoading(false);
@@ -116,7 +116,6 @@ export default function StudyGroupsPage() {
       setGroupDescription('');
       fetchGroups();
     } catch (error) {
-      console.error('Failed to create study group:', error);
       toast.error('Failed to create study group');
     }
   };
@@ -136,7 +135,6 @@ export default function StudyGroupsPage() {
       setJoinCode('');
       fetchGroups();
     } catch (error) {
-      console.error('Failed to join group:', error);
       toast.error('Failed to join group');
     }
   };
@@ -219,6 +217,14 @@ export default function StudyGroupsPage() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (

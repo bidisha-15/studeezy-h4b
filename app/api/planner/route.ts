@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import {prisma} from '@/lib/prisma';
+// import { prisma } from '@/lib/prisma'; // Comment out since we are using dummy data
 
 export async function GET() {
   try {
@@ -10,111 +10,92 @@ export async function GET() {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const plans = await prisma.aiStudyPlan.findMany({
-      where: {
+    // Using dummy data as requested, because of database issues.
+    const dummyManualPlans = [
+      {
+        id: 'manual-plan-1',
+        title: 'Mid-Term Exam Prep',
+        date: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString(),
         userId: session.user.id,
-      },
-      include: {
-        subject: true,
-        materials: {
-          include: {
+        linkedMaterials: [
+          {
             material: {
-              select: {
-                id: true,
-                fileType: true,
-                title: true,
-                subject: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
+              id: 'material-1',
+              title: 'Introduction to Algorithms',
+              fileType: 'pdf',
+              subject: { name: 'Computer Science' }
+            }
           },
-        },
+          {
+            material: {
+              id: 'material-2',
+              title: 'Data Structures Notes',
+              fileType: 'pdf',
+              subject: { name: 'Computer Science' }
+            }
+          }
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+      {
+        id: 'manual-plan-2',
+        title: 'Calculus Final Review',
+        date: new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(),
+        userId: session.user.id,
+        linkedMaterials: [
+          {
+            material: {
+              id: 'material-3',
+              title: 'Derivatives Cheat Sheet',
+              fileType: 'png',
+              subject: { name: 'Mathematics' }
+            }
+          }
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
 
-    // If no plans exist, return sample data for demonstration
-    if (plans.length === 0) {
-      return NextResponse.json([
-        {
-          id: 'sample-plan-1',
-          timeFrame: 'This week',
-          subject: { name: 'Computer Science' },
-          materials: [],
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'sample-plan-2',
-          timeFrame: 'Next week',
-          subject: { name: 'Mathematics' },
-          materials: [],
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-        }
-      ]);
-    }
-
-    return NextResponse.json(plans);
+    return NextResponse.json(dummyManualPlans);
   } catch (error) {
     console.error('Error fetching study plans:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-
-    const body = await request.json();
-    const { timeFrame, subjectId, materialIds } = body;
-
-    if (!timeFrame || !subjectId) {
-      return new NextResponse('Missing required fields', { status: 400 });
-    }
-
-    const plan = await prisma.aiStudyPlan.create({
-      data: {
-        timeFrame,
-        subjectId,
+export async function POST(request: Request) {
+    try {
+      const session = await getServerSession(authOptions);
+      if (!session?.user) {
+        return new NextResponse('Unauthorized', { status: 401 });
+      }
+  
+      const body = await request.json();
+      console.log("Received data for new plan:", body);
+      
+      // Since we are not connected to a DB, we just simulate a successful creation
+      const newPlan = {
+        id: `manual-plan-${Math.floor(Math.random() * 1000)}`,
+        ...body,
+        date: new Date(body.date).toISOString(),
         userId: session.user.id,
-        plan: {}, // Empty plan object for now
-        materials: {
-          create: (materialIds || []).map((materialId: string) => ({
-            materialId,
-          })),
-        },
-      },
-      include: {
-        subject: true,
-        materials: {
-          include: {
+        linkedMaterials: body.materialIds.map((id: string) => ({
             material: {
-              select: {
-                id: true,
-                fileType: true,
-                title: true,
-                subject: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(plan);
-  } catch (error) {
-    console.error('Error creating study plan:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
-  }
-} 
+                id,
+                title: `Material ${id}`,
+                fileType: 'pdf',
+                subject: { name: 'Sample Subject'}
+            }
+        })),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+  
+      return NextResponse.json(newPlan, { status: 201 });
+    } catch (error) {
+      console.error('Error creating study plan:', error);
+      return new NextResponse('Internal Server Error', { status: 500 });
+    }
+  } 

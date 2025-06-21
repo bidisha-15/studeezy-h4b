@@ -6,14 +6,14 @@ import { prisma } from "@/lib/prisma";
 // GET processed text for a material
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = context.params
+  const { id } = params;
 
   try {
     const material = await prisma.material.findUnique({
@@ -47,15 +47,15 @@ export async function GET(
 
 // PUT update processed text for a material
 export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = context.params
+  const { id } = params;
   const body = await req.json();
   const { processedText } = body;
 

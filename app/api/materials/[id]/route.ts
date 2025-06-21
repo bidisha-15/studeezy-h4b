@@ -4,9 +4,10 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-  context: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = params;
 
   try {
     const material = await prisma.material.findUnique({
@@ -30,19 +31,18 @@ export async function GET(
 
 
 export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { subjectId, tagIds } = body;
-  const {id} = context.params;
+  const { title, subjectId, tagIds } = body;
 
   try {
     const updatedMaterial = await prisma.material.update({
-      where: { id },
+      where: { id: params.id },
       data: {
         subjectId,
         materialTags: {
@@ -59,26 +59,24 @@ export async function PUT(
 
     return NextResponse.json(updatedMaterial);
   } catch (err) {
-    console.error("Failed to update material:", err);
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }
 
 // DELETE material
 export async function DELETE(
-  context: { params: { id: string } }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const {id} = context.params;
   try {
     await prisma.material.delete({
-      where: { id },
+      where: { id: params.id },
     });
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (err) {
-    console.error("Failed to delete material:", err);
     return NextResponse.json({ error: "Deletion failed" }, { status: 500 });
   }
 }

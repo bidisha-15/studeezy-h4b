@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, FileText, Trash2, Download } from 'lucide-react';
+import { Plus, FileText, Trash2, Download, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEdgeStore } from '@/lib/edgestore';
 import {
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Material {
   id: string;
@@ -81,8 +82,8 @@ export default function MaterialsPage() {
       const data = await response.json();
       setMaterials(data);
     } catch (error) {
-      console.error('Failed to fetch materials:', error);
       toast.error('Failed to fetch materials');
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -97,8 +98,8 @@ export default function MaterialsPage() {
       const data = await response.json();
       setSubjects(data);
     } catch (error) {
-      console.error('Failed to fetch subjects:', error);
       toast.error('Failed to fetch subjects');
+      console.log(error);
     }
   }
   const fetchTags = async () => {
@@ -111,8 +112,8 @@ export default function MaterialsPage() {
       const data = await response.json();
       setTags(data);
     } catch (error) {
-      console.error('Failed to fetch tags:', error);
       toast.error('Failed to fetch tags');
+      console.log(error);
     }
   }
 
@@ -173,8 +174,8 @@ export default function MaterialsPage() {
       setSelectedTags([]);
       fetchMaterials();
     } catch (error) {
-      console.error('Failed to upload material:', error);
       toast.error('Failed to upload material');
+      console.log(error);
     }
   };
 
@@ -189,8 +190,8 @@ export default function MaterialsPage() {
       toast.success('Material deleted successfully!');
       fetchMaterials();
     } catch (error) {
-      console.error('Failed to delete material:', error);
       toast.error('Failed to delete material');
+      console.log(error);
     }
   };
 
@@ -209,8 +210,8 @@ export default function MaterialsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Failed to download material:', error);
       toast.error('Failed to download material');
+      console.log(error);
     }
   };
 
@@ -273,34 +274,40 @@ export default function MaterialsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Select Tags</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {tags.map((tag) => {
-                      const isSelected = selectedTags.includes(tag.id);
-                      return (
-                        <label
-                          key={tag.id}
-                          className={`flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer ${isSelected ? "bg-secondary" : "bg-muted"
-                            }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => {
-                              if (isSelected) {
-                                setSelectedTags(selectedTags.filter((id) => id !== tag.id));
-                              } else {
-                                setSelectedTags([...selectedTags, tag.id]);
-                              }
-                            }}
-                            className="hidden"
-                          />
-                          <span>{tag.name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
+  <Label>Select Tags</Label>
+  <div className="grid grid-cols-2 gap-2">
+    {tags.map((tag) => {
+      const isSelected = selectedTags.includes(tag.id);
+
+      return (
+        <label
+          key={tag.id}
+          className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors
+            ${
+              isSelected
+                ? "bg-primary border-primary text-white shadow-md"
+                : "bg-muted border-border text-muted-foreground hover:bg-muted/80"
+            }`}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => {
+              if (isSelected) {
+                setSelectedTags(selectedTags.filter((id) => id !== tag.id));
+              } else {
+                setSelectedTags([...selectedTags, tag.id]);
+              }
+            }}
+            className="hidden"
+          />
+          <span className="font-medium">{tag.name}</span>
+        </label>
+      );
+    })}
+  </div>
+</div>
+
 
                 <div className="flex justify-end gap-2">
                   <Button
@@ -326,7 +333,7 @@ export default function MaterialsPage() {
         ) : materials.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {materials.map((material) => (
-              <Card key={material.id} className="hover:shadow-md transition-shadow" onClick={() => router.push(`/dashboard/materials/${material.id}`)}>
+              <Card key={material.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -373,6 +380,12 @@ export default function MaterialsPage() {
                       </Button>
                     </div>
                   </div>
+                  <Button asChild className="w-full">
+                    <Link href={`/dashboard/materials/${material.id}`}>
+                      View Materials
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))}

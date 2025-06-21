@@ -7,21 +7,21 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, BookOpen, Users, BarChart3, Calendar, Brain, CreditCard, Tags, Home, GraduationCap, Crosshair } from 'lucide-react';
+import { Menu, BookOpen, Users, BarChart3, Calendar, Brain, CreditCard, Tags, Home, GraduationCap, Crosshair, Zap } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserNav } from '@/components/UserNav';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Study Groups', href: '/dashboard/groups', icon: Users },
+  { name: 'Subjects', href: '/dashboard/subjects', icon: GraduationCap },
   { name: 'Materials', href: '/dashboard/materials', icon: BookOpen },
   { name: 'Focus Sessions', href: '/dashboard/focus-session', icon: Crosshair },
+  { name: 'Study Groups', href: '/dashboard/groups', icon: Users },
   { name: 'Quizzes', href: '/dashboard/quizzes', icon: Brain },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Flashcards', href: '/dashboard/flashcards', icon: CreditCard },
   { name: 'Planner', href: '/dashboard/planner', icon: Calendar },
-  { name: 'Subjects', href: '/dashboard/subjects', icon: GraduationCap },
   { name: 'Tags Management', href: '/dashboard/tags', icon: Tags },
 ];
 
@@ -55,8 +55,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-6 border-b">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-lg">
-            <Brain className="h-5 w-5 text-white" />
+          {/* <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-lg"> */}
+          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r rounded-lg">
+            <img src="/studeezy.png" alt="Studeezy Logo" className="h-8 w-8 dark:invert" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
             Studeezy

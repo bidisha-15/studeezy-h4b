@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import {prisma} from '@/lib/prisma';
@@ -27,7 +27,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -42,7 +42,15 @@ export async function POST(request: NextRequest) {
       return new NextResponse('Missing required fields', { status: 400 });
     }
 
-    return NextResponse.json({ms: "dummt route"});
+    const subject = await prisma.subject.create({
+      data: {
+        name,
+        code,
+        userId: session.user.id,
+      },
+    });
+
+    return NextResponse.json(subject);
   } catch (error) {
     console.error('Error creating subject:', error);
     return new NextResponse('Internal Server Error', { status: 500 });

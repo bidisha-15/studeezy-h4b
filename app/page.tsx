@@ -13,9 +13,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Brain,
-  FileText,
   MessageSquare,
-  Zap,
   Upload,
   BookOpen,
   Users,
@@ -28,7 +26,7 @@ import {
   CheckCircle,
   Github,
   Twitter,
-  Mail,
+  Mail
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserNav } from "@/components/UserNav";
@@ -66,9 +64,10 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-lg">
-              <Brain className="h-5 w-5 text-white" />
-            </div>
+            {/* <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-lg"> */}
+            {/* <div className="flex items-center justify-center w-8 h-8 bg-gradient-to- rounded-lg"> */}
+              {/* <img src="/studeezy.png" alt="Studeezy Logo" className="h-8 w-8 dark:invert" /> */}
+            {/* </div> */}
             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
               Studeezy
             </span>
@@ -311,7 +310,7 @@ const Features = () => {
         >
           {features.map((feature, index) => (
             <motion.div key={index} variants={itemVariants}>
-              <Card className="h-full hover:shadow-lg transition-all duration-300 border-0 shadow-md hover:shadow-xl hover:-translate-y-1">
+              <Card className="h-full transition-all duration-300 border-0 shadow-md hover:shadow-xl hover:-translate-y-1">
                 <CardHeader>
                   <div
                     className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4`}

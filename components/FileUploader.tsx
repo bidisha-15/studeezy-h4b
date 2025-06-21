@@ -23,7 +23,6 @@ export default function FileUploader({ onUpload }: { onUpload: (url: string) => 
       onUpload(res.url);
       toast.success('Upload successful!');
     } catch (err) {
-      console.error('Upload failed:', err);
       toast.error('Upload failed');
     } finally {
       setUploading(false);

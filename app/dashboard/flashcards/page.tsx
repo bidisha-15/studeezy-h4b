@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, BookOpen, Play, FolderOpen } from 'lucide-react';
+import { Plus, BookOpen, Trash2, Sparkles, Play, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -46,27 +46,9 @@ export default function FlashcardsPage() {
     fetchGroupedFlashcards();
   }, []);
 
-  const filterFlashcards = useCallback(() => {
-    if (filterType === 'all') {
-      setFilteredFlashcards(groupedFlashcards);
-      return;
-    }
-
-    const filtered = groupedFlashcards.filter(group => {
-      if (filterType === 'subject') {
-        return group.material.subject.name === selectedFilter;
-      } else if (filterType === 'tag') {
-        return group.material.materialTags.some(mt => mt.tag.name === selectedFilter);
-      }
-      return true;
-    });
-
-    setFilteredFlashcards(filtered);
-  }, [groupedFlashcards, filterType, selectedFilter]);
-
   useEffect(() => {
     filterFlashcards();
-  }, [filterFlashcards]);
+  }, [groupedFlashcards, filterType, selectedFilter]);
 
   const fetchGroupedFlashcards = async () => {
     try {
@@ -82,6 +64,24 @@ export default function FlashcardsPage() {
     }
   };
 
+  const filterFlashcards = () => {
+    if (filterType === 'all') {
+      setFilteredFlashcards(groupedFlashcards);
+      return;
+    }
+
+    const filtered = groupedFlashcards.filter(group => {
+      if (filterType === 'subject') {
+        return group.material.subject.name === selectedFilter;
+      } else if (filterType === 'tag') {
+        return group.material.materialTags.some(mt => mt.tag.name === selectedFilter);
+      }
+      return true;
+    });
+
+    setFilteredFlashcards(filtered);
+  };
+
   const getUniqueSubjects = () => {
     const subjects = new Set(groupedFlashcards.map(group => group.material.subject.name));
     return Array.from(subjects).sort();
@@ -93,6 +93,21 @@ export default function FlashcardsPage() {
       group.material.materialTags.forEach(mt => tags.add(mt.tag.name));
     });
     return Array.from(tags).sort();
+  };
+
+  const handleDeleteFlashcard = async (flashcardId: string) => {
+    try {
+      const response = await fetch(`/api/flashcards/${flashcardId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete flashcard');
+
+      toast.success('Flashcard deleted successfully!');
+      fetchGroupedFlashcards();
+    } catch (error) {
+      toast.error('Failed to delete flashcard');
+    }
   };
 
   if (loading) {

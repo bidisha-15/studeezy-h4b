@@ -24,32 +24,24 @@ model User {
   flashcards         Flashcard[]
   quizzes            Quiz[]
   aiStudyPlans       AiStudyPlan[]
-  Tag                Tag[]
 }
 
 model Subject {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  name  String
-  color String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  code      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.ObjectId
 
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @db.ObjectId
-
-  materials   Material[]
-  tags        Tag[]
-  AiStudyPlan AiStudyPlan[]
+  materials    Material[]
+  aiStudyPlans AiStudyPlan[]
 }
 
 model Tag {
   id    String @id @default(auto()) @map("_id") @db.ObjectId
   name  String
   color String
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @db.ObjectId
-
-  subject   Subject? @relation(fields: [subjectId], references: [id])
-  subjectId String?  @db.ObjectId
 
   materialTags MaterialTag[]
 }
@@ -118,7 +110,7 @@ model StudyGroup {
 
   createdBy   User?   @relation(fields: [createdById], references: [id])
   createdById String? @db.ObjectId
-  inviteCode  String? @unique
+  inviteCode String? @unique
 
   members   GroupMember[]
   materials GroupMaterial[]

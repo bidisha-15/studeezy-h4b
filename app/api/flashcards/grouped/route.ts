@@ -2,21 +2,6 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import type { Subject, MaterialTag, Tag } from '@prisma/client';
-
-type GroupedFlashcard = {
-  material: {
-    id: string;
-    title: string;
-    subject: Subject;
-    materialTags: (MaterialTag & { tag: Tag })[];
-  };
-  flashcards: {
-    id: string;
-    question: string;
-    answer: string;
-  }[];
-};
 
 export async function GET() {
   try {
@@ -77,15 +62,15 @@ export async function GET() {
       });
       
       return acc;
-    }, {} as Record<string, GroupedFlashcard>);
+    }, {} as Record<string, any>);
 
     // Convert to array and sort by material title
-    const result = Object.values(groupedFlashcards).sort((a, b) => 
+    const result = Object.values(groupedFlashcards).sort((a: any, b: any) => 
       a.material.title.localeCompare(b.material.title)
     );
 
     console.log(`Grouped into ${result.length} materials with flashcards`);
-    result.forEach((group) => {
+    result.forEach((group: any) => {
       console.log(`- ${group.material.title}: ${group.flashcards.length} flashcards`);
     });
 
