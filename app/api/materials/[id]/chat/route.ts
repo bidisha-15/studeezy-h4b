@@ -15,7 +15,7 @@ interface ChatResponse {
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const body = await req.json() as ChatMessage;

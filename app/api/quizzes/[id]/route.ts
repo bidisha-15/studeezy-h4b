@@ -4,15 +4,14 @@ import { authOptions } from '@/lib/auth';
 import {prisma} from '@/lib/prisma';
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-    const { id } = params
+    const { id } = context.params;
 
     const quiz = await prisma.quiz.findUnique({
       where: {

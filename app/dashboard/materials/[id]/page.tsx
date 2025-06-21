@@ -44,7 +44,7 @@ interface Material {
   }[];
 }
 
-export default function MaterialDetailPage({ params }: { params: { id: string } }) {
+export default function MaterialDetailPage(context: { params: { id: string } }) {
   const { id } = use(params);
   const router = useRouter();
   const [material, setMaterial] = useState<Material | null>(null);
