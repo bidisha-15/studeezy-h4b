@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getImageOCR, understandDoc } from '@/lib/geminiServices';
 
 export async function GET() {
   try {
@@ -42,9 +43,26 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, fileName, fileType, fileSize, fileUrl, subjectId, tagIds, extractedText } = body;
+    const { title, fileName, fileType, fileSize, fileUrl, subjectId, tagIds } = body;
+
     if (!fileUrl || !title || !subjectId) {
       return new NextResponse('Missing required fields', { status: 400 });
+    }
+
+    let processedText = '';
+
+    // Perform OCR processing based on file type using the Edgestore URL
+    try {
+      if (fileType.startsWith('image/')) {
+        // images, getImageOCR
+        const prompt = "Extract all text from this image. Include any mathematical equations, diagrams, or structured content. Format the output clearly.";
+        processedText = await getImageOCR(fileUrl, prompt) || '';
+      } else if (fileType === 'application/pdf') {
+        // PDFs, understandDoc
+        processedText = await understandDoc(fileUrl) || '';
+      }
+    } catch (ocrError) {
+      console.error('OCR processing failed:', ocrError);
     }
 
     const material = await prisma.material.create({
@@ -56,9 +74,9 @@ export async function POST(request: Request) {
         fileUrl,
         userId: session.user.id,
         subjectId,
-        processedText: extractedText,
+        processedText,
         materialTags: {
-          create: tagIds.map((tagId: string) => ({
+          create: (tagIds || []).map((tagId: string) => ({
             tagId,
           })),
         },

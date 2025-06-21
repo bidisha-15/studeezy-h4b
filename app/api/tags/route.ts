@@ -43,3 +43,5 @@ export async function POST(req: NextRequest) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
+// export async function DELETE 

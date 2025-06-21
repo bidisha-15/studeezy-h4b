@@ -13,7 +13,7 @@ export async function GET(
     // }
 
     const { id } = params;
-    
+
     try {
         const materials = await prisma.material.findMany({
             where: {
@@ -37,5 +37,23 @@ export async function GET(
     } catch (error) {
         console.error('Error fetching materials by tag:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
+    }
+}
+
+export async function DELETE(
+    req: Request,
+    { params }: { params: { id: string } }
+) {
+    const id = params.id;
+    try {
+        const deletedTag = await prisma.tag.delete({
+            where: {
+                id
+            }
+        });
+        return NextResponse.json({ msg: "Tag deleted" }, { status: 200 });
+    } catch (error) {
+        return NextResponse.json({ msg: "Failed to delete tag" }, { status: 500 });
+
     }
 }
