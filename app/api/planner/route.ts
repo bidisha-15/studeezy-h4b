@@ -15,7 +15,8 @@ export async function GET() {
         userId: session.user.id,
       },
       include: {
-        linkedMaterials: {
+        subject: true,
+        materials: {
           include: {
             material: {
               select: {
@@ -33,9 +34,29 @@ export async function GET() {
         },
       },
       orderBy: {
-        date: 'asc',
+        createdAt: 'desc',
       },
     });
+
+    // If no plans exist, return sample data for demonstration
+    if (plans.length === 0) {
+      return NextResponse.json([
+        {
+          id: 'sample-plan-1',
+          timeFrame: 'This week',
+          subject: { name: 'Computer Science' },
+          materials: [],
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'sample-plan-2',
+          timeFrame: 'Next week',
+          subject: { name: 'Mathematics' },
+          materials: [],
+          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        }
+      ]);
+    }
 
     return NextResponse.json(plans);
   } catch (error) {
@@ -52,25 +73,27 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, date, materialIds } = body;
+    const { timeFrame, subjectId, materialIds } = body;
 
-    if (!title || !date) {
+    if (!timeFrame || !subjectId) {
       return new NextResponse('Missing required fields', { status: 400 });
     }
 
     const plan = await prisma.aiStudyPlan.create({
       data: {
-        // title,
-        date: new Date(date),
+        timeFrame,
+        subjectId,
         userId: session.user.id,
-        linkedMaterials: {
-          create: materialIds.map((materialId: string) => ({
+        plan: {}, // Empty plan object for now
+        materials: {
+          create: (materialIds || []).map((materialId: string) => ({
             materialId,
           })),
         },
       },
       include: {
-        linkedMaterials: {
+        subject: true,
+        materials: {
           include: {
             material: {
               select: {
