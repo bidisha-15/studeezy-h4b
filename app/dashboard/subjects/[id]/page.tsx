@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Calendar, BookOpen, ArrowLeft, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import axios from 'axios';
 
 
 interface Material {
@@ -41,21 +42,22 @@ interface SubjectData {
   materials: Material[];
 }
 
-export default function MaterialsBySubject({ params }: { params: { id: string } }) {
+export default function MaterialsBySubject({ params }:  { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [subjectData, setSubjectData] = useState<SubjectData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchMaterialsBySubject();
-  }, [params.id]);
+  }, [id]);
 
   const fetchMaterialsBySubject = async () => {
     try {
-      const response = await fetch(`/api/subjects/${params.id}/materials`);
-      if (!response.ok) {
+      const response = await axios.get(`/api/subjects/${id}/materials`);
+      if (response.status != 200) {
         throw new Error('Failed to fetch materials');
       }
-      const data = await response.json();
+      const data = response.data;
       setSubjectData(data);
     } catch (error) {
       console.error('Error fetching materials by subject:', error);
@@ -176,7 +178,7 @@ export default function MaterialsBySubject({ params }: { params: { id: string } 
                         <Badge
                           key={materialTag.tag.id}
                           variant="secondary"
-                          style={{ 
+                          style={{
                             backgroundColor: materialTag.tag.color + '20',
                             color: materialTag.tag.color,
                             border: `1px solid ${materialTag.tag.color}40`
@@ -187,7 +189,7 @@ export default function MaterialsBySubject({ params }: { params: { id: string } 
                       ))}
                     </div>
                   )}
-                  
+
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
