@@ -5,14 +5,14 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    // const session = await getServerSession(authOptions);
-    // if (!session?.user) {
-    //     return new NextResponse('Unauthorized', { status: 401 });
-    // }
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
 
-    const { id } = params;
+    const { id } = await params;
 
     try {
         const materials = await prisma.material.findMany({
@@ -42,18 +42,22 @@ export async function GET(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const id = params.id;
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
+    const { id } = await params;
     try {
-        const deletedTag = await prisma.tag.delete({
+        await prisma.tag.delete({
             where: {
                 id
             }
         });
         return NextResponse.json({ msg: "Tag deleted" }, { status: 200 });
     } catch (error) {
+        console.error("Failed to delete tag:", error);
         return NextResponse.json({ msg: "Failed to delete tag" }, { status: 500 });
-
     }
 }

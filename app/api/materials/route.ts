@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -27,6 +27,48 @@ export async function GET() {
         uploadedAt: 'desc',
       },
     });
+
+    // If no materials exist, return sample data for demonstration
+    if (materials.length === 0) {
+      return NextResponse.json([
+        {
+          id: 'sample-1',
+          title: 'Introduction to Machine Learning',
+          fileName: 'ml-intro.pdf',
+          fileType: 'application/pdf',
+          fileSize: 2048576,
+          fileUrl: '#',
+          uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          processedText: 'Sample processed text for machine learning introduction...',
+          subject: { name: 'Computer Science', code: 'CS101' },
+          materialTags: []
+        },
+        {
+          id: 'sample-2',
+          title: 'Calculus Problem Set',
+          fileName: 'calculus-ps.pdf',
+          fileType: 'application/pdf',
+          fileSize: 1536000,
+          fileUrl: '#',
+          uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          processedText: 'Sample processed text for calculus problems...',
+          subject: { name: 'Mathematics', code: 'MATH201' },
+          materialTags: []
+        },
+        {
+          id: 'sample-3',
+          title: 'Physics Lab Report',
+          fileName: 'physics-lab.docx',
+          fileType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          fileSize: 512000,
+          fileUrl: '#',
+          uploadedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          processedText: 'Sample processed text for physics lab report...',
+          subject: { name: 'Physics', code: 'PHY101' },
+          materialTags: []
+        }
+      ]);
+    }
 
     return NextResponse.json(materials);
   } catch (error) {

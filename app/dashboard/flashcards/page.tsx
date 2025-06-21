@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+import { useState, useEffect, useCallback } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, BookOpen, Trash2, Sparkles, Play, FolderOpen } from 'lucide-react';
+import { Plus, BookOpen, Play, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -46,25 +46,7 @@ export default function FlashcardsPage() {
     fetchGroupedFlashcards();
   }, []);
 
-  useEffect(() => {
-    filterFlashcards();
-  }, [groupedFlashcards, filterType, selectedFilter]);
-
-  const fetchGroupedFlashcards = async () => {
-    try {
-      const response = await fetch('/api/flashcards/grouped');
-      if (!response.ok) throw new Error('Failed to fetch flashcards');
-      const data = await response.json();
-      setGroupedFlashcards(data);
-    } catch (error) {
-      console.error('Error fetching flashcards:', error);
-      toast.error('Failed to fetch flashcards');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterFlashcards = () => {
+  const filterFlashcards = useCallback(() => {
     if (filterType === 'all') {
       setFilteredFlashcards(groupedFlashcards);
       return;
@@ -80,6 +62,24 @@ export default function FlashcardsPage() {
     });
 
     setFilteredFlashcards(filtered);
+  }, [groupedFlashcards, filterType, selectedFilter]);
+
+  useEffect(() => {
+    filterFlashcards();
+  }, [filterFlashcards]);
+
+  const fetchGroupedFlashcards = async () => {
+    try {
+      const response = await fetch('/api/flashcards/grouped');
+      if (!response.ok) throw new Error('Failed to fetch flashcards');
+      const data = await response.json();
+      setGroupedFlashcards(data);
+    } catch (error) {
+      console.error('Error fetching flashcards:', error);
+      toast.error('Failed to fetch flashcards');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getUniqueSubjects = () => {
@@ -95,24 +95,9 @@ export default function FlashcardsPage() {
     return Array.from(tags).sort();
   };
 
-  const handleDeleteFlashcard = async (flashcardId: string) => {
-    try {
-      const response = await fetch(`/api/flashcards/${flashcardId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete flashcard');
-
-      toast.success('Flashcard deleted successfully!');
-      fetchGroupedFlashcards();
-    } catch (error) {
-      toast.error('Failed to delete flashcard');
-    }
-  };
-
   if (loading) {
     return (
-      <DashboardLayout>
+      
         <div className="space-y-6">
           <div className="h-8 bg-muted rounded animate-pulse w-48" />
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -121,12 +106,12 @@ export default function FlashcardsPage() {
             ))}
           </div>
         </div>
-      </DashboardLayout>
+      
     );
   }
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -255,6 +240,6 @@ export default function FlashcardsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }

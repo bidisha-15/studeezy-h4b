@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -37,6 +37,7 @@ interface StudyPlan {
   materials: {
     material: Material;
   }[];
+  linkedMaterials?: unknown[];
 }
 
 export default function PlannerPage() {
@@ -60,8 +61,8 @@ export default function PlannerPage() {
       const response = await fetch('/api/planner');
       if (!response.ok) throw new Error('Failed to fetch plans');
       const data = await response.json();
-      //dashboard UI compatibility
-      const patchedPlans = data.map((plan: any) => ({
+      
+      const patchedPlans = data.map((plan: StudyPlan) => ({
         ...plan,
         materials: Array.isArray(plan.linkedMaterials)
           ? plan.linkedMaterials
@@ -69,6 +70,7 @@ export default function PlannerPage() {
       }));
       setPlans(patchedPlans);
     } catch (error) {
+      console.error('Failed to fetch plans:', error);
       toast.error('Failed to fetch study plans');
     } finally {
       setLoading(false);
@@ -82,6 +84,7 @@ export default function PlannerPage() {
       const data = await response.json();
       setMaterials(data);
     } catch (error) {
+      console.error('Failed to fetch materials:', error);
       toast.error('Failed to fetch materials');
     }
   };
@@ -110,6 +113,7 @@ export default function PlannerPage() {
       });
       fetchPlans();
     } catch (error) {
+      console.error('Failed to create plan:', error);
       toast.error('Failed to create study plan');
     }
   };
@@ -125,12 +129,13 @@ export default function PlannerPage() {
       toast.success('Study plan deleted successfully!');
       fetchPlans();
     } catch (error) {
+      console.error('Failed to delete plan:', error);
       toast.error('Failed to delete study plan');
     }
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -291,6 +296,6 @@ export default function PlannerPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }

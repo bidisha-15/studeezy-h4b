@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,7 @@ interface Subject {
 }
 
 export default function SubjectsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -54,6 +54,7 @@ export default function SubjectsPage() {
       const data = await response.json();
       setSubjects(data);
     } catch (error) {
+      console.error("Failed to fetch subjects:", error);
       toast.error("Failed to fetch subjects");
     }
   };
@@ -71,6 +72,7 @@ export default function SubjectsPage() {
       setNewSubject({ name: '', code: '' });
       fetchSubjects();
     } catch (error) {
+      console.error("Failed to create subject:", error);
       toast.error('Failed to create subject');
     }
   };
@@ -89,6 +91,7 @@ export default function SubjectsPage() {
       toast.success('Subject deleted successfully');
       fetchSubjects();
     } catch (error) {
+      console.error("Failed to delete subject:", error);
       toast.error('Failed to delete subject');
     } finally {
       setDeletingId(null);
@@ -98,14 +101,14 @@ export default function SubjectsPage() {
   // Show loading state while checking authentication
   if (status === 'loading') {
     return (
-      <DashboardLayout>
+      
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
             <p className="mt-2 text-muted-foreground">Loading...</p>
           </div>
         </div>
-      </DashboardLayout>
+      
     );
   }
 
@@ -115,7 +118,7 @@ export default function SubjectsPage() {
   }
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -217,6 +220,6 @@ export default function SubjectsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }

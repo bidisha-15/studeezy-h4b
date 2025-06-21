@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -27,8 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useRouter } from 'next/navigation';
-import { createWorker } from 'tesseract.js';
-// import {converter} from '@/lib/converter';
 
 interface Material {
   id: string;
@@ -83,6 +81,7 @@ export default function MaterialsPage() {
       const data = await response.json();
       setMaterials(data);
     } catch (error) {
+      console.error('Failed to fetch materials:', error);
       toast.error('Failed to fetch materials');
     } finally {
       setLoading(false);
@@ -98,6 +97,7 @@ export default function MaterialsPage() {
       const data = await response.json();
       setSubjects(data);
     } catch (error) {
+      console.error('Failed to fetch subjects:', error);
       toast.error('Failed to fetch subjects');
     }
   }
@@ -111,6 +111,7 @@ export default function MaterialsPage() {
       const data = await response.json();
       setTags(data);
     } catch (error) {
+      console.error('Failed to fetch tags:', error);
       toast.error('Failed to fetch tags');
     }
   }
@@ -130,7 +131,7 @@ export default function MaterialsPage() {
       toast.error('Please fill in all required fields');
       return;
     }
-    console.log(selectedFile);
+    // console.log(selectedFile);
 
     try {
       const uploaded = await edgestore.publicFiles.upload({
@@ -172,6 +173,7 @@ export default function MaterialsPage() {
       setSelectedTags([]);
       fetchMaterials();
     } catch (error) {
+      console.error('Failed to upload material:', error);
       toast.error('Failed to upload material');
     }
   };
@@ -187,6 +189,7 @@ export default function MaterialsPage() {
       toast.success('Material deleted successfully!');
       fetchMaterials();
     } catch (error) {
+      console.error('Failed to delete material:', error);
       toast.error('Failed to delete material');
     }
   };
@@ -206,12 +209,13 @@ export default function MaterialsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
+      console.error('Failed to download material:', error);
       toast.error('Failed to download material');
     }
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -389,6 +393,6 @@ export default function MaterialsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    
   );
 }

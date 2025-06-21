@@ -4,9 +4,10 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { askGemini } from '@/lib/gemini';
 
+// Correct typing for App Router route handler
 export async function POST(
   req: Request,
-  { params }: { params: { materialId: string } }
+  context: { params: Promise<{ materialId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +15,7 @@ export async function POST(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { materialId } = params;
+    const { materialId } = await context.params;
     const body = await req.json();
     const { question } = body;
 
@@ -22,7 +23,6 @@ export async function POST(
       return new NextResponse('Question is required', { status: 400 });
     }
 
-    // Get the material and its processed text
     const material = await prisma.material.findUnique({
       where: { id: materialId },
       include: { subject: true },
@@ -36,7 +36,6 @@ export async function POST(
       return new NextResponse('No processed text available for this material', { status: 400 });
     }
 
-    // Generate answer using AI
     const prompt = `Based on the following educational content, please answer the user's question.
 
 Content: ${material.processedText}
@@ -65,4 +64,3 @@ If the question cannot be answered using the provided content, please state that
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
-

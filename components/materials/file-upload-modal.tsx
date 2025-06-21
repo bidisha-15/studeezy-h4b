@@ -92,6 +92,7 @@ export function FileUploadModal({ open, onOpenChange, onUpload }: FileUploadModa
       const data = await response.json();
       setSubjects(data);
     } catch (error) {
+      console.error('Failed to fetch subjects:', error);
       toast.error('Failed to fetch subjects');
     }
   };
@@ -103,6 +104,7 @@ export function FileUploadModal({ open, onOpenChange, onUpload }: FileUploadModa
       const data = await response.json();
       setTags(data);
     } catch (error) {
+      console.error('Failed to fetch tags:', error);
       toast.error('Failed to fetch tags');
     } finally {
       setLoading(false);

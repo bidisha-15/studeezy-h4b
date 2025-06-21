@@ -8,12 +8,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, Users, ArrowLeft, Copy, Trash2 } from "lucide-react";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { 
+  BookOpen, 
+  Users, 
+  ArrowLeft, 
+  Copy, 
+  Trash2, 
+  Plus,
+  FileText,
+  Calendar,
+  Crown,
+  UserPlus,
+  Share2,
+  Eye,
+  Download,
+  MoreVertical
+} from "lucide-react";
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface User {
   id: string;
@@ -35,6 +48,7 @@ interface Material {
   fileName: string;
   fileType: string;
   fileSize: number;
+  fileUrl: string;
   uploadedAt: string;
   userId: string;
   subject: {
@@ -72,10 +86,8 @@ export default function GroupDetailPage() {
   const groupId = params.id as string;
 
   const [group, setGroup] = useState<StudyGroup | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
   const [materials, setMaterials] = useState<GroupMaterial[]>([]);
   const [userMaterials, setUserMaterials] = useState<Material[]>([]);
-  const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
@@ -84,6 +96,7 @@ export default function GroupDetailPage() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'materials' | 'members'>('overview');
 
   useEffect(() => {
     if (groupId) fetchAll();
@@ -93,18 +106,14 @@ export default function GroupDetailPage() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [groupRes, membersRes, materialsRes, userMaterialsRes, inviteRes] = await Promise.all([
+      const [groupRes, materialsRes, userMaterialsRes] = await Promise.all([
         fetch(`/api/groups/${groupId}`),
-        fetch(`/api/groups/${groupId}/members`),
         fetch(`/api/groups/${groupId}/materials`),
         fetch(`/api/materials`),
-        fetch(`/api/groups/${groupId}/invite`),
       ]);
       if (groupRes.ok) setGroup(await groupRes.json());
-      if (membersRes.ok) setMembers(await membersRes.json());
       if (materialsRes.ok) setMaterials(await materialsRes.json());
       if (userMaterialsRes.ok) setUserMaterials(await userMaterialsRes.json());
-      if (inviteRes.ok) setInviteCode((await inviteRes.json()).inviteCode);
       
       // Find current user in members
       const groupData = await groupRes.json();
@@ -121,15 +130,6 @@ export default function GroupDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCopy = async () => {
-    if (!inviteCode) return;
-    try {
-      await navigator.clipboard.writeText(inviteCode);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 1200);
-    } catch {}
   };
 
   const handleShareMaterial = async () => {
@@ -190,6 +190,7 @@ export default function GroupDetailPage() {
       setTimeout(() => setCopySuccess(false), 2000);
       toast.success("Invite code copied to clipboard!");
     } catch (error) {
+      console.error("Failed to copy invite code:", error);
       toast.error("Failed to copy invite code");
     }
   };
@@ -210,243 +211,589 @@ export default function GroupDetailPage() {
     });
   };
 
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) return '🖼️';
+    if (fileType === 'application/pdf') return '📄';
+    if (fileType.includes('word') || fileType.includes('document')) return '📝';
+    if (fileType.includes('powerpoint') || fileType.includes('presentation')) return '📊';
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return '📈';
+    return '📁';
+  };
+
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="h-8 bg-muted rounded animate-pulse w-48" />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
-            ))}
-          </div>
+      <div className="space-y-6">
+        <div className="h-8 bg-muted rounded animate-pulse w-48" />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
+          ))}
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   if (!group) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold">Group not found</h1>
-          <Button asChild className="mt-4">
-            <Link href="/dashboard/groups">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Groups
-            </Link>
-          </Button>
-        </div>
-      </DashboardLayout>
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold">Group not found</h1>
+        <Button asChild className="mt-4">
+          <Link href="/dashboard/groups">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Groups
+          </Link>
+        </Button>
+      </div>
     );
   }
 
-  const isAdmin = group.members.find(member => 
-    member.user.id === currentUser?.id
-  )?.role === "ADMIN";
-
-  const isCreator = group.createdBy.id === currentUser?.id;
-
   return (
-    <DashboardLayout>
-      <div className="space-y-6 max-w-3xl mx-auto">
-        <div className="flex items-center gap-4 mb-2">
-          <Button variant="outline" size="sm" asChild>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/groups">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight flex-1">{group.name}</h1>
-          <Button variant="outline" size="sm" onClick={() => setInviteDialogOpen(true)}>
-            <Copy className="h-4 w-4 mr-1" /> Invite Code
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{group.name}</h1>
+            <p className="text-muted-foreground">{group.description}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setInviteDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Invite Members
           </Button>
-          <Button variant="destructive" size="sm" onClick={handleLeaveGroup} disabled={leaveLoading}>
+          <Button variant="destructive" onClick={handleLeaveGroup} disabled={leaveLoading}>
             Leave Group
           </Button>
         </div>
-        <p className="text-muted-foreground mb-4">{group.description}</p>
+      </div>
 
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" /> Members ({group.members.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-4">
-            {group.members.map((member) => (
-              <div key={member.id} className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={member.user.image || ""} alt={member.user.name} />
-                  <AvatarFallback className="text-xs">
-                    {member.user.name.split(" ").map((n: string) => n[0]).join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm">{member.user.name}</span>
-                <span className="text-xs text-muted-foreground">{member.role}</span>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-2xl font-bold">{group.members.length}</p>
+                <p className="text-sm text-muted-foreground">Members</p>
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-2xl font-bold">{group.materials.length}</p>
+                <p className="text-sm text-muted-foreground">Materials</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-purple-600" />
+              <div>
+                <p className="text-2xl font-bold">{formatDate(group.createdAt)}</p>
+                <p className="text-sm text-muted-foreground">Created</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-yellow-600" />
+              <div>
+                <p className="text-2xl font-bold">{group.createdBy.name}</p>
+                <p className="text-sm text-muted-foreground">Creator</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
+      {/* Navigation Tabs */}
+      <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
+        <Button
+          variant={activeTab === 'overview' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('overview')}
+        >
+          Overview
+        </Button>
+        <Button
+          variant={activeTab === 'materials' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('materials')}
+        >
+          Materials ({group.materials.length})
+        </Button>
+        <Button
+          variant={activeTab === 'members' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('members')}
+        >
+          Members ({group.members.length})
+        </Button>
+      </div>
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Recent Materials */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Recent Materials
+              </CardTitle>
+              <CardDescription>
+                Latest shared study materials
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {group.materials.length === 0 ? (
+                <div className="text-center py-8">
+                  <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No materials shared yet</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-2"
+                    onClick={() => setActiveTab('materials')}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Share Material
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {group.materials.slice(0, 3).map((groupMaterial) => {
+                    const material = groupMaterial.material;
+                    return (
+                      <div key={material.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="text-2xl">{getFileIcon(material.fileType)}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{material.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {material.subject.name} • {formatFileSize(material.fileSize)}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/dashboard/materials/${material.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    );
+                  })}
+                  {group.materials.length > 3 && (
+                    <Button variant="outline" className="w-full" onClick={() => setActiveTab('materials')}>
+                      View All Materials
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Group Members */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Group Members
+              </CardTitle>
+              <CardDescription>
+                Study partners in this group
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {group.members.map((member) => (
+                  <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={member.user.image || ""} alt={member.user.name} />
+                      <AvatarFallback>
+                        {member.user.name.split(" ").map((n: string) => n[0]).join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{member.user.name}</p>
+                      <p className="text-sm text-muted-foreground">{member.user.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {member.role === 'ADMIN' && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Crown className="mr-1 h-3 w-3" />
+                          Admin
+                        </Badge>
+                      )}
+                      {member.user.id === group.createdBy.id && (
+                        <Badge variant="outline" className="text-xs">Creator</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Materials Tab */}
+      {activeTab === 'materials' && (
+        <div className="space-y-6">
+          {/* Share Material Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Share2 className="h-5 w-5" />
+                Share Your Materials
+              </CardTitle>
+              <CardDescription>
+                Share your study materials with the group
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {userMaterials.length === 0 ? (
+                <div className="text-center py-8">
+                  <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">You have no materials to share</p>
+                  <Button asChild>
+                    <Link href="/dashboard/materials">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Upload Materials
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {userMaterials.map((material) => {
+                    const isShared = materials.some((g) => g.material.id === material.id);
+                    return (
+                      <Card key={material.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-2xl">{getFileIcon(material.fileType)}</div>
+                            {isShared && (
+                              <Badge variant="secondary" className="text-xs">
+                                Shared
+                              </Badge>
+                            )}
+                          </div>
+                          <CardTitle className="text-sm line-clamp-2">{material.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div 
+                                className="w-2 h-2 rounded-full" 
+                                style={{ backgroundColor: material.subject.color }}
+                              />
+                              <span>{material.subject.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <FileText className="h-3 w-3" />
+                              <span>{formatFileSize(material.fileSize)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(material.uploadedAt)}</span>
+                            </div>
+                            {material.materialTags.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {material.materialTags.slice(0, 2).map((mt) => (
+                                  <Badge key={mt.tag.name} variant="outline" className="text-xs">
+                                    {mt.tag.name}
+                                  </Badge>
+                                ))}
+                                {material.materialTags.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{material.materialTags.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              asChild
+                            >
+                              <Link href={`/dashboard/materials/${material.id}`}>
+                                <Eye className="mr-1 h-3 w-3" />
+                                View
+                              </Link>
+                            </Button>
+                            {!isShared ? (
+                              <Button 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => {
+                                  setSelectedMaterialId(material.id);
+                                  setShareDialogOpen(true);
+                                }}
+                              >
+                                <Share2 className="mr-1 h-3 w-3" />
+                                Share
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => handleUnshareMaterial(material.id)}
+                              >
+                                <Trash2 className="mr-1 h-3 w-3" />
+                                Unshare
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Shared Materials */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Shared Materials ({group.materials.length})
+              </CardTitle>
+              <CardDescription>
+                Materials shared by group members
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {group.materials.length === 0 ? (
+                <div className="text-center py-8">
+                  <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No materials shared yet</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {group.materials.map((groupMaterial) => {
+                    const material = groupMaterial.material;
+                    const isOwner = material.userId === currentUser?.id;
+                    
+                    return (
+                      <Card key={material.id} className="hover:shadow-md transition-shadow group">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-2xl">{getFileIcon(material.fileType)}</div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/dashboard/materials/${material.id}`}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Material
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <a href={material.fileUrl} download={material.fileName}>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download
+                                  </a>
+                                </DropdownMenuItem>
+                                {isOwner && (
+                                  <DropdownMenuItem 
+                                    onClick={() => handleUnshareMaterial(material.id)}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Remove from Group
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <CardTitle className="text-sm line-clamp-2">{material.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div 
+                                className="w-2 h-2 rounded-full" 
+                                style={{ backgroundColor: material.subject.color }}
+                              />
+                              <span>{material.subject.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <FileText className="h-3 w-3" />
+                              <span>{formatFileSize(material.fileSize)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(material.uploadedAt)}</span>
+                            </div>
+                            {material.materialTags.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {material.materialTags.slice(0, 2).map((mt) => (
+                                  <Badge key={mt.tag.name} variant="outline" className="text-xs">
+                                    {mt.tag.name}
+                                  </Badge>
+                                ))}
+                                {material.materialTags.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{material.materialTags.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full mt-4"
+                            asChild
+                          >
+                            <Link href={`/dashboard/materials/${material.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Material
+                            </Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Members Tab */}
+      {activeTab === 'members' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" /> Shared Materials ({group.materials.length})
+              <Users className="h-5 w-5" />
+              Group Members ({group.members.length})
             </CardTitle>
+            <CardDescription>
+              Manage group members and permissions
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {group.materials.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No materials shared yet.</p>
-            ) : (
-              <ul className="list-disc pl-5 space-y-1">
-                {group.materials.map((groupMaterial) => {
-                  const material = groupMaterial.material;
-                  const isOwner = material.userId === currentUser?.id;
-                  
-                  return (
-                    <li key={material.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span>{material.title}</span>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{material.subject.name}</span>
-                          <span>•</span>
-                          <span>{formatFileSize(material.fileSize)}</span>
-                          <span>•</span>
-                          <span>{formatDate(material.uploadedAt)}</span>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {group.members.map((member) => (
+                <Card key={member.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={member.user.image || ""} alt={member.user.name} />
+                        <AvatarFallback>
+                          {member.user.name.split(" ").map((n: string) => n[0]).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{member.user.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{member.user.email}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {member.role === 'ADMIN' && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Crown className="mr-1 h-3 w-3" />
+                              Admin
+                            </Badge>
+                          )}
+                          {member.user.id === group.createdBy.id && (
+                            <Badge variant="outline" className="text-xs">Creator</Badge>
+                          )}
                         </div>
                       </div>
-                      {isOwner && (
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => handleUnshareMaterial(material.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+                    </div>
+                    <div className="mt-3 text-xs text-muted-foreground">
+                      Joined {formatDate(member.joinedAt)}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dialogs */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share Material</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a material" />
+              </SelectTrigger>
+              <SelectContent>
+                {userMaterials
+                  .filter(material => 
+                    !group.materials.some(gm => gm.material.id === material.id)
+                  )
+                  .map((material) => (
+                    <SelectItem key={material.id} value={material.id}>
+                      {material.title}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleShareMaterial} disabled={!selectedMaterialId || shareLoading}>
+                {shareLoading ? 'Sharing...' : 'Share'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Members</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Input value={group.inviteCode} readOnly className="font-mono" />
+              <Button variant="outline" size="icon" onClick={handleCopyInviteCode}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Share this invite code with your study partners. Anyone with this code can join your group.
+            </p>
+            {copySuccess && (
+              <div className="flex items-center gap-2 text-green-600 text-sm">
+                <Copy className="h-4 w-4" />
+                Invite code copied to clipboard!
+              </div>
             )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Share Your Material</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {userMaterials.length === 0 ? (
-              <p className="text-muted-foreground text-sm">You have no uploaded materials.</p>
-            ) : (
-              <ul className="list-disc pl-5 space-y-1">
-                {userMaterials.map((mat) => (
-                  <li key={mat.id} className="flex items-center gap-2">
-                    <span>{mat.title}</span>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      disabled={shareLoading || materials.some((g) => g.material.id === mat.id)}
-                      onClick={() => {
-                        setSelectedMaterialId(mat.id);
-                        setShareDialogOpen(true);
-                      }}
-                    >
-                      Share
-                    </Button>
-                    {materials.some((g) => g.material.id === mat.id) && (
-                      <span className="text-xs text-green-600">Shared</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Group Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium">Created by</p>
-                <p className="text-muted-foreground">{group.createdBy.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Created on</p>
-                <p className="text-muted-foreground">{formatDate(group.createdAt)}</p>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Invite Code</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Input value={group.inviteCode} readOnly className="w-40" />
-                <Button variant="outline" size="icon" onClick={handleCopyInviteCode}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-                {copySuccess && <span className="text-green-600 text-xs">Copied!</span>}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Share Material</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a material" />
-                </SelectTrigger>
-                <SelectContent>
-                  {userMaterials
-                    .filter(material => 
-                      !group.materials.some(gm => gm.material.id === material.id)
-                    )
-                    .map((material) => (
-                      <SelectItem key={material.id} value={material.id}>
-                        {material.title}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleShareMaterial} disabled={!selectedMaterialId}>
-                  Share
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite Members</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Input value={group.inviteCode} readOnly />
-                <Button variant="outline" size="icon" onClick={handleCopyInviteCode}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Anyone with this code can join your group. Share it securely with your study partners.
-              </p>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </DashboardLayout>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 } 

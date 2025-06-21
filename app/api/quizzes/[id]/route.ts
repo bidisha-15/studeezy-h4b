@@ -5,17 +5,18 @@ import {prisma} from '@/lib/prisma';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
+    const { id } = await params;
 
     const quiz = await prisma.quiz.findUnique({
       where: {
-        id: params.id,
+        id: id,
       },
     });
 
@@ -29,7 +30,7 @@ export async function DELETE(
 
     await prisma.quiz.delete({
       where: {
-        id: params.id,
+        id: id,
       },
     });
 

@@ -72,7 +72,7 @@ Make sure the questions are relevant to the content and test understanding of ke
         userId: session.user.id,
         materialId: materialId,
         questions: {
-          create: questions.map((q: any) => ({
+          create: questions.map((q: { question: string, options: string[], answer: string }) => ({
             question: q.question,
             options: q.options,
             answer: q.answer,

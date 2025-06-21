@@ -5,8 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { askGemini } from '@/lib/gemini';
 
 export async function POST(
-  req: Request,
-  { params }: { params: { materialId: string } }
+  req: Request, { params }: { params: Promise<{ materialId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +13,7 @@ export async function POST(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { materialId } = params;
+    const { materialId } = await params;
     const body = await req.json();
     const { flashcardCount = 10 } = body;
 
@@ -103,7 +102,7 @@ Focus on the most important concepts that students need to remember and understa
 
     // Create flashcards in the database
     const createdFlashcards = await Promise.all(
-      flashcards.map(async (flashcard: any, index: number) => {
+      flashcards.map(async (flashcard: { question: string, answer: string }, index: number) => {
         // Validate each flashcard has required fields
         if (!flashcard.question || !flashcard.answer) {
           console.error(`Invalid flashcard at index ${index}:`, flashcard);

@@ -1,15 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { Sidebar } from '@/components/ui/sidebar';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, LogOut, Settings, User } from 'lucide-react';
-// import { mockUser } from '@/lib/mockData';
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
+import { Menu, BookOpen, Users, BarChart3, Calendar, Brain, CreditCard, Tags, Home, GraduationCap } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { UserNav } from '@/components/UserNav';
+
+const navigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Materials', href: '/dashboard/materials', icon: BookOpen },
+  { name: 'Study Groups', href: '/dashboard/groups', icon: Users },
+  { name: 'Quizzes', href: '/dashboard/quizzes', icon: Brain },
+  { name: 'Flashcards', href: '/dashboard/flashcards', icon: CreditCard },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'Planner', href: '/dashboard/planner', icon: Calendar },
+  { name: 'Subjects', href: '/dashboard/subjects', icon: GraduationCap },
+  { name: 'Tags Management', href: '/dashboard/tags', icon: Tags },
+];
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,82 +30,96 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const session = useSession();
-  const user = session.data?.user;
-    const name = session.data?.user?.name;
+  const { status } = useSession();
+  const pathname = usePathname();
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const SidebarContent = () => (
+    <div className="flex h-full flex-col">
+      <div className="flex h-16 items-center px-6 border-b">
+        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-violet-600 rounded-lg">
+            <Brain className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+            Studeezy
+          </span>
+        </Link>
+      </div>
+      <ScrollArea className="flex-1 overflow-auto">
+        <nav className="grid gap-2 p-4">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2 font-medium transition-all',
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                )}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+      </ScrollArea>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-64">
-          <DashboardSidebar onClose={() => setSidebarOpen(false)} />
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64">
-        <DashboardSidebar />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
+        <div className="border-r bg-white dark:bg-gray-950 w-full h-full">
+          <SidebarContent />
+        </div>
       </div>
 
-      {/* Main Content */}
+
       <div className="lg:pl-64">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="lg:hidden">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-              </Sheet>
-              <h1 className="ml-4 text-2xl font-semibold text-gray-900 lg:ml-0">
-                Studeezy
-              </h1>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
-                    {/* <AvatarImage src={mockUser.avatar} alt={mockUser.name} /> */}
-                    <AvatarFallback>B</AvatarFallback>
-                  </Avatar>
+        <header className="fixed top-0 right-0 left-0 lg:left-64 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu className="h-5 w-5" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user?.name}</p>
-                    <p className="w-[200px] truncate text-sm text-muted-foreground">
-                      {user?.email}
-                    </p>
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-64">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
 
-        {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">
-          {children}
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
+            </h1>
+
+            <div className="flex items-center gap-x-4">
+              <ThemeToggle />
+              <UserNav />
+            </div>
+          </div>
+        </header>
+
+        <main className="pt-16">
+          <div className="p-4 sm:p-6 lg:p-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>
