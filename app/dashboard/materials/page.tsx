@@ -130,7 +130,7 @@ export default function MaterialsPage() {
       toast.error('Please fill in all required fields');
       return;
     }
-    console.log(selectedFile);
+    // console.log(selectedFile);
 
     try {
       const uploaded = await edgestore.publicFiles.upload({
