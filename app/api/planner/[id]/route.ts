@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import {prisma} from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,10 +12,10 @@ export async function DELETE(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const plan = await prisma.studyPlan.findUnique({
-      where: {
-        id: params.id,
-      },
+    const { id } = context.params;
+
+    const plan = await prisma.aiStudyPlan.findUnique({
+      where: { id },
     });
 
     if (!plan) {
@@ -27,10 +26,8 @@ export async function DELETE(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    await prisma.studyPlan.delete({
-      where: {
-        id: params.id,
-      },
+    await prisma.aiStudyPlan.delete({
+      where: { id },
     });
 
     return new NextResponse(null, { status: 204 });
@@ -38,4 +35,4 @@ export async function DELETE(
     console.error('Error deleting study plan:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
-} 
+}

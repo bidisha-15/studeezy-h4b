@@ -3,16 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+export async function GET(context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = context.params
   
   try {
     // First verify the subject exists and belongs to the user

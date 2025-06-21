@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -48,7 +48,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -66,27 +66,39 @@ export async function POST(request: Request) {
     function generateInviteCode() {
       return crypto.randomBytes(3).toString('hex').toUpperCase();
     }
-    let inviteCode = generateInviteCode();
+    const inviteCode = generateInviteCode();
     // Ensure uniqueness (in production, check DB for collisions)
 
     const group = await prisma.studyGroup.create({
       data: {
         name,
         description,
-        createdById: session.user.id,
-        ...(inviteCode ? { inviteCode } : {}),
+        inviteCode,
+        createdBy: {
+          connect: {
+            id: session.user.id,
+          },
+        },
         members: {
           create: {
-            userId: session.user.id,
             role: 'ADMIN',
+            user: {
+              connect: {
+                id: session.user.id,
+              },
+            },
           },
         },
         materials: {
           create: materialIds?.map((materialId: string) => ({
-            materialId,
+            material: {
+              connect: {
+                id: materialId,
+              },
+            },
           })) || [],
         },
-      } as any,
+      },
       include: {
         members: {
           include: {

@@ -76,7 +76,7 @@ export async function GET() {
       });
     }
 
-    const studyTimeBySubject = materials.reduce((acc: any[], material) => {
+    const studyTimeBySubject = materials.reduce((acc: { subject: string; hours: number; }[], material) => {
       const existing = acc.find(item => item.subject === material.subject.name);
       if (existing) {
         existing.hours += Math.floor(Math.random() * 10) + 5; 

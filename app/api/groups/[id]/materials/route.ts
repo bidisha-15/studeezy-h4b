@@ -5,8 +5,8 @@ import { prisma } from '@/lib/prisma';
 
 // GET /api/groups/[id]/materials - list all shared materials in the group
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function GET(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = context.params
 
     // Check if user is a member of the group
     const membership = await prisma.groupMember.findFirst({
@@ -59,8 +59,8 @@ export async function GET(
 
 // POST /api/groups/[id]/materials - share a material with the group
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -68,7 +68,7 @@ export async function POST(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = context.params
     const body = await request.json();
     const { materialId } = body;
 
@@ -128,8 +128,8 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -137,7 +137,7 @@ export async function DELETE(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = context.params
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
 

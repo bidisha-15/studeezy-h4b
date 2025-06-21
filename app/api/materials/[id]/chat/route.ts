@@ -28,7 +28,6 @@ export async function POST(
       );
     }
     const {id} = await params;
-    console.log("bckedn id ---> ", id);
 
     const material = await prisma.material.findUnique({
       where: { id },
@@ -85,10 +84,3 @@ export async function POST(
   }
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  // No chat history stored yet, return empty array
-  return NextResponse.json({ messages: [] });
-}

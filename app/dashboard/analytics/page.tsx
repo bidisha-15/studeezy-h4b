@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import { AnalyticsChartCard } from '@/components/analytics/analytics-chart-card';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Clock, Target, Award } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,8 +29,9 @@ export default function AnalyticsPage() {
       const data = await response.json();
       setAnalytics(data);
     } catch (error) {
+      console.error("Failed to fetch analytics:", error);
       toast.error('Failed to fetch analytics');
-      // Set default empty data structure
+      // default
       setAnalytics({
         studyTimeBySubject: [],
         quizPerformance: [],

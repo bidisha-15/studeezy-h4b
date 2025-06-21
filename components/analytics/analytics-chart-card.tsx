@@ -5,12 +5,13 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 
 interface AnalyticsChartCardProps {
   title: string;
-  data: any[];
+  data: { [key: string]: string | number }[];
   type: 'bar' | 'pie' | 'line';
   dataKey?: string;
   xAxisKey?: string;
   colors?: string[];
 }
+
 
 const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'];
 
@@ -26,42 +27,48 @@ export function AnalyticsChartCard({
     switch (type) {
       case 'bar':
         return (
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xAxisKey} />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey={dataKey} fill={colors[0]} />
-          </BarChart>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey={xAxisKey} />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey={dataKey} fill={colors[0]} />
+            </BarChart>
+          </ResponsiveContainer>
         );
       case 'pie':
         return (
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={80}
-              paddingAngle={5}
-              dataKey={dataKey}
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey={dataKey}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
         );
       case 'line':
         return (
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xAxisKey} />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey={dataKey} stroke={colors[0]} strokeWidth={2} />
-          </LineChart>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey={xAxisKey} />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey={dataKey} stroke={colors[0]} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
         );
       default:
         return null;
@@ -74,9 +81,7 @@ export function AnalyticsChartCard({
         <CardTitle className="text-lg">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          {renderChart()}
-        </ResponsiveContainer>
+        {renderChart()}
       </CardContent>
     </Card>
   );

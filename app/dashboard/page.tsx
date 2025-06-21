@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,36 +9,22 @@ import { Progress } from '@/components/ui/progress';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { 
-  Brain, 
   FileText, 
   MessageSquare, 
   Upload, 
-  BookOpen, 
   Users, 
   TrendingUp,
-  Star,
-  Moon,
-  Sun,
-  Settings,
-  Bell,
-  Search,
-  Filter,
   MoreHorizontal,
-  Clock,
   Target,
   Zap,
   Award,
   ChevronRight,
   Plus,
   Eye,
-  Edit,
-  Trash2,
-  Download,
   Share2,
   Calendar,
   BarChart3,
-  Lightbulb,
-  GraduationCap
+  Lightbulb
 } from 'lucide-react';
 
 const containerVariants = {
@@ -61,7 +46,15 @@ const itemVariants = {
   }
 } as const;
 
-const WelcomeSection = ({ user, stats }: { user: any, stats: any }) => {
+interface WelcomeStats {
+  studyStreak?: number;
+  totalDocuments?: number;
+  totalFlashcards?: number;
+  totalPoints?: number;
+  upcomingAssignments?: number;
+}
+
+const WelcomeSection = ({ user, stats }: { user: { name?: string | null } | null, stats: WelcomeStats }) => {
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening';
 
@@ -231,7 +224,18 @@ const QuickActions = () => {
   );
 };
 
-const RecentMaterials = ({ materials }: { materials: any[] }) => {
+interface RecentMaterial {
+  id: string;
+  title: string;
+  type: string;
+  updatedAt: string;
+  subject: {
+    name: string;
+  };
+  fileSize: number;
+}
+
+const RecentMaterials = ({ materials }: { materials: RecentMaterial[] }) => {
   const router = useRouter();
 
   const getTimeAgo = (date: string) => {
@@ -322,7 +326,21 @@ const RecentMaterials = ({ materials }: { materials: any[] }) => {
   );
 };
 
-const StudyProgress = ({ weeklyProgress, upcomingDeadlines }: { weeklyProgress: any[], upcomingDeadlines: any[] }) => {
+interface WeeklyProgressItem {
+  day: string;
+  hours: number;
+}
+
+interface UpcomingDeadlineItem {
+  title: string;
+  course: string;
+  dueDate: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+const StudyProgress = ({ weeklyProgress, upcomingDeadlines }: { weeklyProgress: WeeklyProgressItem[], upcomingDeadlines: UpcomingDeadlineItem[] }) => {
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <motion.div
@@ -346,7 +364,7 @@ const StudyProgress = ({ weeklyProgress, upcomingDeadlines }: { weeklyProgress: 
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-300 w-8">
-                      {day.day}
+                      {dayNames[index]}
                     </span>
                     <div className="flex-1">
                       <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -397,7 +415,7 @@ const StudyProgress = ({ weeklyProgress, upcomingDeadlines }: { weeklyProgress: 
               <span>Upcoming Deadlines</span>
             </CardTitle>
             <CardDescription>
-              Don't miss these important dates
+              Don&apos;t miss these important dates
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -435,10 +453,32 @@ const StudyProgress = ({ weeklyProgress, upcomingDeadlines }: { weeklyProgress: 
   );
 };
 
+interface DashboardData {
+  user: { name?: string | null } | null;
+  stats: WelcomeStats;
+  materials: RecentMaterial[];
+  weeklyProgress: WeeklyProgressItem[];
+  upcomingDeadlines: UpcomingDeadlineItem[];
+}
+
+interface RawMaterial {
+  id: string;
+  title: string;
+  fileType: string;
+  uploadedAt: string;
+  subject: { name: string; };
+  fileSize: number;
+}
+
+interface StudyPlan {
+  subject: { name: string | null } | null;
+  timeFrame: string;
+}
+
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState<any>({
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     user: null,
     stats: {
       studyStreak: 0,
@@ -484,25 +524,25 @@ export default function Dashboard() {
         const plannerRes = await fetch('/api/planner');
         const studyPlans = await plannerRes.json();
         console.log("d--studyPlans", studyPlans);
-        console.log("d--studyPlans", studyPlans);
 
         // Transform study plans into upcoming deadlines format
-        const upcomingDeadlines = studyPlans.slice(0, 3).map((plan: any, index: number) => ({
+        const upcomingDeadlines = studyPlans.slice(0, 3).map((plan: StudyPlan, index: number) => ({
           title: `Study Plan for ${plan.subject?.name || 'General'}`,
           course: plan.subject?.name || 'General',
           dueDate: plan.timeFrame || 'This week',
-          priority: index === 0 ? 'high' : index === 1 ? 'medium' : 'low'
+          priority: (['high', 'medium', 'low'] as const)[index % 3],
         }));
 
         // Transform materials to include progress and type
-        const transformedMaterials = materials.slice(0, 4).map((material: any) => ({
+        const transformedMaterials = materials.slice(0, 4).map((material: RawMaterial) => ({
           ...material,
           type: material.fileType?.split('/')[1]?.toUpperCase() || 'DOCUMENT',
-          updatedAt: material.uploadedAt
+          updatedAt: material.uploadedAt,
+          fileSize: material.fileSize || 0
         }));
 
         setDashboardData({
-          user: session?.user,
+          user: session?.user || null,
           stats: {
             studyStreak: analytics.studyStreak,
             totalDocuments: analytics.totalDocuments,
@@ -517,31 +557,48 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         // Keep the fallback data that's already set in the initial state
+        setDashboardData({
+          user: session?.user || null,
+          stats: { studyStreak: 0, totalDocuments: 0, totalFlashcards: 0, totalPoints: 0, upcomingAssignments: 0 },
+          materials: [],
+          weeklyProgress: [
+            { day: 'Mon', hours: 0 },
+            { day: 'Tue', hours: 0 },
+            { day: 'Wed', hours: 0 },
+            { day: 'Thu', hours: 0 },
+            { day: 'Fri', hours: 0 },
+            { day: 'Sat', hours: 0 },
+            { day: 'Sun', hours: 0 }
+          ],
+          upcomingDeadlines: []
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [session, status, router]);
+  }, [status, session, router]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
+  if (loading || status === 'loading') {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
-
+  
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <WelcomeSection user={dashboardData.user} stats={dashboardData.stats} />
       <QuickActions />
-      <StudyProgress weeklyProgress={dashboardData.weeklyProgress} upcomingDeadlines={dashboardData.upcomingDeadlines} />
-      <RecentMaterials materials={dashboardData.materials} />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mt-8">
+        <div className="xl:col-span-2">
+          <RecentMaterials materials={dashboardData.materials} />
+        </div>
+        <div>
+          <StudyProgress 
+            weeklyProgress={dashboardData.weeklyProgress} 
+            upcomingDeadlines={dashboardData.upcomingDeadlines}
+          />
+        </div>
+      </div>
     </div>
   );
 }
