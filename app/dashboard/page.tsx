@@ -205,7 +205,7 @@ export default function DashboardPage() {
       )}
 
       {/* Study Progress */}
-      {stats && (
+      {stats && stats.studyProgress && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -220,7 +220,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Completion Rate</span>
               <span className="text-sm text-muted-foreground">
-                {stats.studyProgress && stats.studyProgress?.completed} of {stats.studyProgress.total} completed
+                {stats.studyProgress.completed} of {stats.studyProgress.total} completed
               </span>
             </div>
             <Progress value={stats.studyProgress.percentage} className="w-full" />
@@ -253,7 +253,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Activity */}
-      {stats && stats.recentActivity.length > 0 && (
+      {stats && stats.recentActivity && stats.recentActivity.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
