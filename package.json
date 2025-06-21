@@ -1,13 +1,15 @@
 {
   "name": "studeezy",
   "version": "0.1.0",
-  "private": true,
+  "private": true,"prisma": {
+  "schema": "prisma/schema.prisma"
+},
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
-    
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@edgestore/react": "^0.5.2",

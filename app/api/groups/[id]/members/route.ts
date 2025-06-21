@@ -3,14 +3,15 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: {params: {id: string}}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
+    const {id } = await params;
     const group = await prisma.studyGroup.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         members: {
           include: {
@@ -29,23 +30,25 @@ export async function GET(req: NextRequest, { params }: {params: {id: string}}) 
   }
 }
 
-export async function POST(req: NextRequest, { params }: {params: {id: string}}) {
+export async function POST(req: NextRequest,{ params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
+    const {id } = await params;
     const { userId } = await req.json();
     if (!userId) return new NextResponse('Missing userId', { status: 400 });
     // Check if current user is admin
+    
     const member = await prisma.groupMember.findFirst({
-      where: { groupId: params.id, userId: session.user.id, role: 'ADMIN' },
+      where: { groupId: id, userId: session.user.id, role: 'ADMIN' },
     });
     if (!member) return new NextResponse('Only admin can add members', { status: 403 });
     // Add user
     await prisma.groupMember.create({
       data: {
-        groupId: params.id,
+        groupId: id,
         userId,
         role: 'MEMBER',
       },
