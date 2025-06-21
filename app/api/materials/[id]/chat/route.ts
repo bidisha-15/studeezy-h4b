@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { askGemini } from '@/lib/gemini'; 
 
@@ -14,7 +14,7 @@ interface ChatResponse {
 }
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   context: { params: { id: string } }
 ) {
   try {

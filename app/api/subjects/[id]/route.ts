@@ -7,7 +7,6 @@ import { authOptions } from '@/lib/auth';
 import {prisma} from '@/lib/prisma';
 
 export async function DELETE(
-  request: Request,
   context: { params: { id: string } }
 ) {
   try {

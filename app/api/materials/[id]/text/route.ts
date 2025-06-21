@@ -47,7 +47,7 @@ export async function GET(
 
 // PUT update processed text for a material
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);

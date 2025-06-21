@@ -1,10 +1,8 @@
-// app/api/auth/signup/route.ts
-
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const { email, password, name } = await req.json();
 
   const existingUser = await prisma.user.findUnique({
