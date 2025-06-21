@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ interface Material {
 
 export default function FlashcardStudyPage({ params }: { params: Promise<{ materialId: string }> }) {
   const { materialId } = use(params);
-  const router = useRouter();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [material, setMaterial] = useState<Material | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -46,14 +44,7 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
     total: 0,
   });
 
-  useEffect(() => {
-    if (materialId) {
-      fetchMaterial();
-      fetchFlashcards();
-    }
-  }, [materialId]);
-
-  const fetchMaterial = async () => {
+  const fetchMaterial = useCallback(async () => {
     try {
       const response = await fetch(`/api/materials/${materialId}`);
       if (response.ok) {
@@ -63,9 +54,9 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
     } catch (error) {
       console.error('Failed to fetch material:', error);
     }
-  };
+  }, [materialId]);
 
-  const fetchFlashcards = async () => {
+  const fetchFlashcards = useCallback(async () => {
     try {
       const response = await fetch(`/api/flashcards?materialId=${materialId}`);
       if (response.ok) {
@@ -78,7 +69,14 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
     } finally {
       setLoading(false);
     }
-  };
+  }, [materialId]);
+
+  useEffect(() => {
+    if (materialId) {
+      fetchMaterial();
+      fetchFlashcards();
+    }
+  }, [materialId, fetchMaterial, fetchFlashcards]);
 
   const generateFlashcards = async () => {
     setGenerating(true);
@@ -94,6 +92,7 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
       toast.success('Flashcards generated successfully!');
       fetchFlashcards();
     } catch (error) {
+      console.error('Failed to generate flashcards:', error);
       toast.error('Failed to generate flashcards');
     } finally {
       setGenerating(false);
@@ -111,7 +110,6 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
       setCurrentIndex(prev => prev + 1);
       setShowAnswer(false);
     } else {
-      // Study session completed
       toast.success('Study session completed!');
     }
   };
@@ -154,7 +152,7 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
@@ -177,7 +175,6 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
         </div>
       </div>
 
-      {/* Progress */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -211,7 +208,6 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
         </CardContent>
       </Card>
 
-      {/* Flashcards */}
       {flashcards.length === 0 ? (
         <Card>
           <CardHeader>
@@ -246,7 +242,6 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
                 </div>
               </div>
 
-              {/* Answer */}
               {showAnswer && (
                 <div className="space-y-4 pt-6 border-t">
                   <h3 className="text-lg font-medium text-muted-foreground">Answer</h3>
@@ -256,7 +251,7 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
                 </div>
               )}
 
-              {/* Actions */}
+              
               <div className="flex justify-center gap-4 pt-6">
                 {!showAnswer ? (
                   <Button onClick={() => setShowAnswer(true)} size="lg">
@@ -289,7 +284,6 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
         </Card>
       )}
 
-      {/* Study Complete */}
       {currentIndex >= flashcards.length && flashcards.length > 0 && (
         <Card>
           <CardHeader>
@@ -302,7 +296,7 @@ export default function FlashcardStudyPage({ params }: { params: Promise<{ mater
             <div className="text-6xl mb-4">🎉</div>
             <h3 className="text-xl font-semibold mb-2">Great job!</h3>
             <p className="text-muted-foreground mb-6">
-              You've completed studying all {flashcards.length} flashcards.
+              You&apos;ve completed studying all {flashcards.length} flashcards.
             </p>
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div>

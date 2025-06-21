@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
@@ -59,13 +58,7 @@ export default function SubjectDetailPage() {
   const [subjectCode, setSubjectCode] = useState('');
   const [subjectColor, setSubjectColor] = useState('#3B82F6');
 
-  useEffect(() => {
-    if (subjectId) {
-      fetchSubjectDetails();
-    }
-  }, [subjectId]);
-
-  const fetchSubjectDetails = async () => {
+  const fetchSubjectDetails = useCallback(async () => {
     try {
       const response = await fetch(`/api/subjects/${subjectId}`);
       if (!response.ok) throw new Error('Failed to fetch subject details');
@@ -75,11 +68,18 @@ export default function SubjectDetailPage() {
       setSubjectCode(data.code);
       setSubjectColor(data.color || '#3B82F6');
     } catch (error) {
+      console.error('Failed to fetch subject details:', error);
       toast.error('Failed to fetch subject details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [subjectId]);
+
+  useEffect(() => {
+    if (subjectId) {
+      fetchSubjectDetails();
+    }
+  }, [subjectId, fetchSubjectDetails]);
 
   const handleUpdateSubject = async () => {
     if (!subjectName.trim()) return;
@@ -101,6 +101,7 @@ export default function SubjectDetailPage() {
       setEditMode(false);
       fetchSubjectDetails();
     } catch (error) {
+      console.error('Failed to update subject:', error);
       toast.error('Failed to update subject');
     }
   };
@@ -120,6 +121,7 @@ export default function SubjectDetailPage() {
       toast.success('Subject deleted successfully!');
       router.push('/dashboard/subjects');
     } catch (error) {
+      console.error('Failed to delete subject:', error);
       toast.error('Failed to delete subject');
     }
   };

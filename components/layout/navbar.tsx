@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Settings, LogOut } from 'lucide-react';
 
 export function Navbar() {
@@ -36,7 +36,7 @@ export function Navbar() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">"mockUser.name"</p>
+              <p className="text-sm font-medium leading-none">&quot;mockUser.name&quot;</p>
               <p className="text-xs leading-none text-muted-foreground">
                 mockUser.email
               </p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -49,13 +49,7 @@ export default function TagDetailPage() {
   const [tagName, setTagName] = useState('');
   const [tagColor, setTagColor] = useState('#3B82F6');
 
-  useEffect(() => {
-    if (tagId) {
-      fetchTagDetails();
-    }
-  }, [tagId]);
-
-  const fetchTagDetails = async () => {
+  const fetchTagDetails = useCallback(async () => {
     try {
       const response = await fetch(`/api/tags/${tagId}`);
       if (!response.ok) throw new Error('Failed to fetch tag details');
@@ -64,11 +58,18 @@ export default function TagDetailPage() {
       setTagName(data.name);
       setTagColor(data.color || '#3B82F6');
     } catch (error) {
+      console.error('Failed to fetch tag details:', error);
       toast.error('Failed to fetch tag details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [tagId]);
+
+  useEffect(() => {
+    if (tagId) {
+      fetchTagDetails();
+    }
+  }, [tagId, fetchTagDetails]);
 
   const handleUpdateTag = async () => {
     if (!tagName.trim()) return;
@@ -89,6 +90,7 @@ export default function TagDetailPage() {
       setEditMode(false);
       fetchTagDetails();
     } catch (error) {
+      console.error('Failed to update tag:', error);
       toast.error('Failed to update tag');
     }
   };
@@ -108,6 +110,7 @@ export default function TagDetailPage() {
       toast.success('Tag deleted successfully!');
       router.push('/dashboard/tags');
     } catch (error) {
+      console.error('Failed to delete tag:', error);
       toast.error('Failed to delete tag');
     }
   };
@@ -236,7 +239,7 @@ export default function TagDetailPage() {
             Tagged Materials ({tag.materials.length})
           </CardTitle>
           <CardDescription>
-            Materials tagged with "{tag.name}"
+            Materials tagged with &quot;{tag.name}&quot;
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -245,11 +248,11 @@ export default function TagDetailPage() {
               <Tag className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No materials tagged</h3>
               <p className="text-muted-foreground mb-4">
-                No materials are currently tagged with "{tag.name}".
+                No materials are currently tagged with &quot;{tag.name}&quot;.
               </p>
               <Button asChild>
                 <Link href="/dashboard/materials">
-                  Browse Materials
+                  View All Materials
                 </Link>
               </Button>
             </div>

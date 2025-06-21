@@ -1,28 +1,25 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, use, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-// import { Tabs, TabsContent, TabsList, TabsTrigger }
 import { 
   ArrowLeft, 
   FileText, 
-  Calendar, 
   Download, 
   Trash2, 
-  Edit,
   MessageSquare,
   Brain,
   CreditCard,
-  Tag,
-  GraduationCap
+  Tag
 } from 'lucide-react';
 import { ChatMessageBubble } from '@/components/chat/chat-message-bubble';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Message } from 'ai/react';
 
 interface Material {
   id: string;
@@ -47,44 +44,31 @@ interface Material {
   }[];
 }
 
-interface ChatMessage {
-  id: string;
-  message: string;
-  response: string;
-  timestamp: string;
-}
-
 export default function MaterialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [material, setMaterial] = useState<Material | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
   const [userMessage, setUserMessage] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    if (id) {
-      fetchMaterialDetails();
-      fetchChatHistory();
-    }
-  }, [id]);
-
-  const fetchMaterialDetails = async () => {
+  const fetchMaterialDetails = useCallback(async () => {
     try {
       const response = await fetch(`/api/materials/${id}`);
       if (!response.ok) throw new Error('Failed to fetch material details');
       const data = await response.json();
       setMaterial(data);
     } catch (error) {
+      console.error('Failed to fetch material details:', error);
       toast.error('Failed to fetch material details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchChatHistory = async () => {
+  const fetchChatHistory = useCallback(async () => {
     try {
       const response = await fetch(`/api/materials/${id}/chat`);
       if (response.ok) {
@@ -94,7 +78,14 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
     } catch (error) {
       console.error('Failed to fetch chat history:', error);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchMaterialDetails();
+      fetchChatHistory();
+    }
+  }, [id, fetchMaterialDetails, fetchChatHistory]);
 
   const handleDeleteMaterial = async () => {
     if (!confirm('Are you sure you want to delete this material? This action cannot be undone.')) {
@@ -111,6 +102,7 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
       toast.success('Material deleted successfully!');
       router.push('/dashboard/materials');
     } catch (error) {
+      console.error('Failed to delete material:', error);
       toast.error('Failed to delete material');
     }
   };
@@ -123,15 +115,16 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
     setUserMessage('');
     setChatLoading(true);
 
-    // Add user message to chat
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      message,
-      response: '',
-      timestamp: new Date().toISOString(),
-    };
+    const newMessages: Message[] = [
+      ...chatMessages,
+      {
+        id: Date.now().toString(),
+        role: 'user',
+        content: message,
+      },
+    ];
 
-    setChatMessages(prev => [...prev, newMessage]);
+    setChatMessages(newMessages);
 
     try {
       const response = await fetch(`/api/materials/${id}/chat`, {
@@ -144,18 +137,19 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
 
       const data = await response.json();
       
-      // Update the message with the response
-      setChatMessages(prev => 
-        prev.map(msg => 
-          msg.id === newMessage.id 
-            ? { ...msg, response: data.response }
-            : msg
-        )
-      );
+      setChatMessages([
+        ...newMessages,
+        {
+          id: data.id || Date.now().toString(),
+          role: 'assistant',
+          content: data.response,
+        },
+      ]);
     } catch (error) {
+      console.error('Failed to send message:', error);
       toast.error('Failed to send message');
       // Remove the failed message
-      setChatMessages(prev => prev.filter(msg => msg.id !== newMessage.id));
+      setChatMessages(prev => prev.slice(0, -1));
     } finally {
       setChatLoading(false);
     }
@@ -359,10 +353,8 @@ export default function MaterialDetailPage({ params }: { params: Promise<{ id: s
                   chatMessages.map((message) => (
                     <div key={message.id} className="space-y-2">
                       <ChatMessageBubble
-                        message={message.message}
-                        response={message.response}
-                        timestamp={message.timestamp}
-                        isLoading={chatLoading && message.id === chatMessages[chatMessages.length - 1]?.id}
+                        message={message}
+                        isLoading={chatLoading && message.role === 'user' && message.id === chatMessages[chatMessages.length - 1]?.id}
                       />
                     </div>
                   ))

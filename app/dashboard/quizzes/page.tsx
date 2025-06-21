@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, BookOpen, Trash2, Edit2, Sparkles } from 'lucide-react';
+import { Plus, BookOpen, Trash2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -97,6 +97,7 @@ export default function QuizzesPage() {
       setSubjects(subjectsData);
       setMaterials(materialsData.filter((m: Material) => m.processedText));
     } catch (error) {
+      console.error('Failed to fetch data:', error);
       toast.error('Failed to fetch data');
     } finally {
       setLoading(false);
@@ -127,6 +128,7 @@ export default function QuizzesPage() {
       });
       fetchData();
     } catch (error) {
+      console.error('Failed to create quiz:', error);
       toast.error('Failed to create quiz');
     }
   };
@@ -158,6 +160,7 @@ export default function QuizzesPage() {
       setSelectedMaterial('');
       fetchData();
     } catch (error) {
+      console.error('Failed to generate AI quiz:', error);
       toast.error('Failed to generate AI quiz');
     } finally {
       setGenerating(false);
@@ -175,6 +178,7 @@ export default function QuizzesPage() {
       toast.success('Quiz deleted successfully!');
       fetchData();
     } catch (error) {
+      console.error('Failed to delete quiz:', error);
       toast.error('Failed to delete quiz');
     }
   };

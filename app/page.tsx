@@ -1,25 +1,19 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Brain,
-  FileText,
   MessageSquare,
-  Zap,
   Upload,
   BookOpen,
   Users,
   TrendingUp,
   Star,
   ArrowRight,
-  Moon,
-  Sun,
   Sparkles,
   CheckCircle,
   Github,
@@ -347,7 +341,7 @@ const Testimonials = () => {
                     ))}
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 mb-6 italic leading-relaxed">
-                    "{testimonial.content}"
+                    &quot;{testimonial.content}&quot;
                   </p>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full flex items-center justify-center text-white font-semibold mr-4">

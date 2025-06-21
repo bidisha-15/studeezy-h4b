@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         materialId: materialId || null,
         questions: {
-          create: questions.map((q: any) => ({
+          create: questions.map((q: { question: string; options: string[]; answer: string; }) => ({
             question: q.question,
             options: q.options,
             answer: q.answer,

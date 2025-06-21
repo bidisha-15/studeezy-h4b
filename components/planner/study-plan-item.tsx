@@ -1,10 +1,9 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { StudyPlan } from '@/types';
+import { StudyPlan } from '@/types/index';
 import { Calendar, Clock, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 

@@ -28,7 +28,7 @@ interface Subject {
 }
 
 export default function SubjectsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -54,6 +54,7 @@ export default function SubjectsPage() {
       const data = await response.json();
       setSubjects(data);
     } catch (error) {
+      console.error("Failed to fetch subjects:", error);
       toast.error("Failed to fetch subjects");
     }
   };
@@ -71,6 +72,7 @@ export default function SubjectsPage() {
       setNewSubject({ name: '', code: '' });
       fetchSubjects();
     } catch (error) {
+      console.error("Failed to create subject:", error);
       toast.error('Failed to create subject');
     }
   };
@@ -89,6 +91,7 @@ export default function SubjectsPage() {
       toast.success('Subject deleted successfully');
       fetchSubjects();
     } catch (error) {
+      console.error("Failed to delete subject:", error);
       toast.error('Failed to delete subject');
     } finally {
       setDeletingId(null);

@@ -55,8 +55,9 @@ export default function RegisterPage() {
       } else {
         toast.error('Signup failed. Please try again.');
       }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Something went wrong');
+    } catch (error) {
+      console.error('Something went wrong:', error);
+      toast.error('Something went wrong');
     } finally {
       setIsLoading(false);
     }

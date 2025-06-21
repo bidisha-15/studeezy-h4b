@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
 
-  const { id } = params;
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: "quizId is required" }, { status: 400 });

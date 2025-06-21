@@ -24,6 +24,7 @@ export async function GET(req: NextRequest, { params }: {params: {id: string}}) 
     if (!group) return new NextResponse('Group not found', { status: 404 });
     return NextResponse.json(group.members);
   } catch (error) {
+    console.error('Error fetching members:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest, { params }: {params: {id: string}})
     });
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Error adding member:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 } 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +55,7 @@ export default function TagsPage() {
       const data = await response.json();
       setTags(data);
     } catch (error) {
+      console.error('Failed to fetch tags:', error);
       toast.error('Failed to fetch tags');
     } finally {
       setLoading(false);
@@ -92,11 +93,12 @@ export default function TagsPage() {
       setTagName('');
       setSelectedColor(PRESET_COLORS[0]);
     } catch (error) {
+      console.error('Failed to create tag:', error);
       toast.error('Failed to create tag');
     }
   };
 
-  const handleDeleteTag = async (id: string, name: string) => {
+  const handleDeleteTag = async (id: string) => {
     try {
       const response = await axios.delete(`/api/tags/${id}`);
 
@@ -105,6 +107,7 @@ export default function TagsPage() {
       setTags(prev => prev.filter(tag => tag.id !== id));
       toast.success('Tag deleted successfully!');
     } catch (error) {
+      console.error('Failed to delete tag:', error);
       toast.error('Failed to delete tag');
     }
   };
@@ -215,7 +218,10 @@ export default function TagsPage() {
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDeleteTag(tag.id, tag.name)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTag(tag.id);
+                        }}
                         className="text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
