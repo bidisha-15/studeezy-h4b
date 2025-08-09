@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const material = await prisma.material.findUnique({
@@ -32,18 +32,20 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
+  const { id } = await params;
   const { title, subjectId, tagIds } = body;
 
   try {
     const updatedMaterial = await prisma.material.update({
-      where: { id: params.id },
+      where: { id },
       data: {
+        title,
         subjectId,
         materialTags: {
           deleteMany: {},
@@ -66,17 +68,20 @@ export async function PUT(
 // DELETE material
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const { id } = await params;
+
   try {
     await prisma.material.delete({
-      where: { id: params.id },
+      where: { id },
     });
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch (err) {
+  } catch (error) {
+    console.error('Delete material error:', error);
     return NextResponse.json({ error: "Deletion failed" }, { status: 500 });
   }
 }

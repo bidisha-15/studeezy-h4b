@@ -6,7 +6,7 @@ import { askGemini } from '@/lib/gemini';
 
 export async function POST(
   req: Request,
-  { params }: { params: { materialId: string } }
+  { params }: { params: Promise<{ materialId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function POST(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const { materialId } = params;
+    const { materialId } = await params;
     const body = await req.json();
     const { title, questionCount = 5 } = body;
 
