@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import * as Tesseract from "tesseract.js";
 import { IncomingForm } from "formidable";
 import fs from "fs";
-import path from "path";
 
 export const config = {
   api: {
@@ -14,7 +13,7 @@ export async function POST(req: Request) {
   return new Promise(async (resolve) => {
     const form = new IncomingForm({ uploadDir: "/tmp", keepExtensions: true });
 
-    form.parse(req as any, async (err, fields, files) => {
+    form.parse(req as unknown as any, async (err, fields, files) => {
       if (err) {
         resolve(
           NextResponse.json({ error: "File parsing failed" }, { status: 400 })
